@@ -175,9 +175,9 @@ test('FT em campo mas faceplate em pressão = não compara', () => {
   assert.strictEqual(compute(m).status, 'insuf');
 });
 
-test('formulário: instrumento em pressão + SDCD em vazão = raiz automática no SDCD', () => {
+test('formulário: instrumento em pressão + SDCD em vazão = chave de raiz no SDCD', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '150', 'in.unit': 'mmH₂O', 'in.lo': '0', 'in.hi': '2500',
-    'ds.unit': 'm³/h', 'ds.hi': '150', 'sd.src': '420', 'sd.conf': true };
+    'ds.unit': 'm³/h', 'ds.hi': '150', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'sim' };
   let r = compute(fromForm(f));
   assert.strictEqual(r.status, 'ok');
   f['fp.hi'] = '100'; r = compute(fromForm(f));
@@ -186,4 +186,14 @@ test('formulário: instrumento em pressão + SDCD em vazão = raiz automática n
   delete f['ds.hi']; r = compute(fromForm(f));
   assert.strictEqual(r.status, 'insuf');
   assert.deepStrictEqual(r.miss.map((x) => x.id), ['ds.hi']);
+});
+
+test('chave de raiz: Não extrair dá divergência, Extrair confere', () => {
+  const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'fp.val': '141,4', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '50',
+    'ds.unit': 'm³/h', 'ds.hi': '200', 'in.rkind': 'valor', 'in.read': '25', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'nao' };
+  assert.strictEqual(compute(fromForm(f)).status, 'div');
+  f['sd.raiz'] = 'sim';
+  const r = compute(fromForm(f));
+  assert.strictEqual(r.status, 'ok');
+  near(r.reading.D, 141.42, 0.01);
 });

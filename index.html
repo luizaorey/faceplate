@@ -132,7 +132,8 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
     <div class="pb">
       <div class="fld"><label>O que o SDCD recebe e o faceplate mostra</label>
         <select data-k="fp.var"><option value="vazao">Vazão (FT)</option><option value="pressao">Pressão (PT)</option></select></div>
-      <p class="hint" data-show="auto">Instrumento em pressão e SDCD em vazão: a raiz quadrada é extraída no SDCD (automático).</p>
+      <div data-show="auto"><label>Raiz quadrada no SDCD</label>
+        <div class="seg" style="margin-bottom:12px"><button data-k="sd.raiz" data-v="nao">Não extrair</button><button data-k="sd.raiz" data-v="sim">Extrair raiz</button></div></div>
       <label>Origem do sinal</label>
       <div class="seg" style="margin-bottom:12px">
         <button data-k="sd.src" data-v="420">4–20 mA</button>
@@ -195,11 +196,12 @@ var fmt=FP.fmt;
 
 function defaults(tipo){
   var v=tipo==='PT'?'pressao':'vazao';
-  return {tipo:tipo,tag:'','fp.var':v,'in.rkind':'valor','sd.src':'420','sd.calc':'none','sd.conf':false};
+  return {tipo:tipo,tag:'','sd.raiz':'nao','fp.var':v,'in.rkind':'valor','sd.src':'420','sd.calc':'none','sd.conf':false};
 }
 function load(){
   try{var t=localStorage.getItem(KEY); if(t) S=JSON.parse(t);}catch(e){}
   if(!S||!S.tipo) S=defaults('FT');
+  if(!S['sd.raiz']) S['sd.raiz']='nao';
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
@@ -244,7 +246,7 @@ function vis(){
     if(w==='auto')on=dq;
     if(w==='calcsel')on=!dq;
     if(w==='hart')on=src==='hart';
-    if(w==='scale')on=src!=='hart'||calc==='linear'||dq;
+    if(w==='scale')on=dq?(src==='hart'&&S['sd.raiz']==='sim'):(src!=='hart'||calc==='linear');
     if(w==='lin')on=calc==='linear'&&!dq;
     if(w==='dslo')on=!dq;
     el.classList.toggle('hide',!on);

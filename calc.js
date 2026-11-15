@@ -130,7 +130,7 @@
     if (srcEff === 'hart') {
       if (!sd.hart) miss('sd.hart', 'SDCD: variável HART selecionada (PV, SV, TV ou QV)');
       else if (sd.hart !== 'PV') R.warn.push('O SDCD lê ' + sd.hart + ', não a PV. Confirme que é a mesma variável da saída analógica configurada no Trex.');
-      if (kind === 'dp2q' && calc === 'none') miss('sd.calc', 'HART digital lê ΔP e o faceplate é vazão: informe a conversão (extração de raiz) aplicada até o faceplate');
+      if (kind === 'dp2q' && calc === 'none') miss('sd.calc', 'HART digital lê pressão e o faceplate é vazão: marque "Extrair raiz" na chave do SDCD (ou informe a conversão aplicada)');
       if ((calc === 'raiz' || calc === 'linear') && !hasScale) miss('sd.lo', 'SDCD: faixa (unidade, início, fim) usada na conversão do valor HART');
     } else if (!hasScale && calc === 'linear') {
       miss('sd.lo', 'SDCD: escala da entrada analógica (unidade, início, fim)');
@@ -297,7 +297,7 @@
     const iu = UNITS[s['in.unit']];
     const instVar = iu && iu.d === 'p' ? 'pressao' : 'vazao';
     const fpVar = s['fp.var'] === 'vazao' ? 'vazao' : 'pressao';
-    // instrumento em pressão e SDCD/faceplate em vazão: a raiz é extraída no SDCD (automático)
+    // instrumento em pressão e SDCD/faceplate em vazão: o usuário diz se o SDCD extrai a raiz (chave sd.raiz)
     const dp2q = fpVar === 'vazao' && instVar === 'pressao';
     return {
       tipo: s.tipo || 'FT',
@@ -310,7 +310,7 @@
       ds: dp2q ? {} : { unit: s['ds.unit'], lo: n('ds.lo'), hi: n('ds.hi') },
       sd: {
         src: s['sd.src'] || 'desc', var: '', unit: s['sd.unit'], lo: n('sd.lo'), hi: n('sd.hi'),
-        calc: dp2q ? 'raiz' : (s['sd.calc'] || 'none'), a: n('sd.a'), b: n('sd.b'), hart: s['sd.hart'] || '',
+        calc: dp2q ? (s['sd.raiz'] === 'sim' ? 'raiz' : 'none') : (s['sd.calc'] || 'none'), a: n('sd.a'), b: n('sd.b'), hart: s['sd.hart'] || '',
         conf: s['sd.conf'] === true || s['sd.conf'] === 'true',
       },
     };

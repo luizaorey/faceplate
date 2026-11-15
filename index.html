@@ -49,6 +49,12 @@ input::placeholder{color:#47606f}
 .seg{display:flex;gap:7px}
 .seg button{flex:1;background:#081521;border:1px solid var(--line);color:#9fb5c4;border-radius:9px;padding:10px 6px;font-size:13px;cursor:pointer;line-height:1.2;min-height:44px}
 .seg button.on{border-color:var(--blue);background:#0b2940;color:var(--cyan)}
+.savebar{display:flex;align-items:center;gap:12px;margin-top:14px}
+.btn.primary{background:#1f6fb2;border-color:#1f6fb2;color:#fff;font-weight:700;padding:13px 20px;font-size:15px}
+.srow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.srow:first-of-type{border-top:0}
+.srow .t{font-size:14px;font-weight:700}.srow .d{font-size:12px;color:#7892a3;margin-top:2px}
+.srow .st{font-size:12px;margin-top:2px}.srow .acts{display:flex;gap:6px;flex-shrink:0}
 .hint{font-size:11.5px;color:#7892a3;margin:-4px 0 10px}
 .sub{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#6f8a9c;margin:14px 0 8px;border-top:1px dashed var(--line);padding-top:10px}
 .chk{display:flex;gap:10px;align-items:flex-start;background:#081521;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:13px;color:#cfe2ef;cursor:pointer;margin-top:4px}
@@ -180,6 +186,12 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
 </div>
 
 <div class="res" id="res"></div>
+
+<div class="savebar">
+  <button class="btn primary" id="bSave">💾 Salvar conferência</button>
+  <span id="svOk" class="hint" style="margin:0"></span>
+</div>
+<div class="box" id="saved" style="margin-top:14px"></div>
 
 <div class="foot">Conferência e simulação na tela — a configuração do instrumento ou do SDCD é feita separadamente.<br>Os dados ficam só neste aparelho.</div>
 </div>
@@ -372,6 +384,31 @@ function render(){
   lastText=t.join('\n');
 }
 
+/* ---------- conferências salvas ---------- */
+var SKEY='faceplate.saved.v1';
+function getSaved(){try{return JSON.parse(localStorage.getItem(SKEY))||[]}catch(e){return[]}}
+function setSaved(a){try{localStorage.setItem(SKEY,JSON.stringify(a));return true}catch(e){return false}}
+function fmtDt(t){var d=new Date(t),p=function(n){return (n<10?'0':'')+n};return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function renderSaved(){
+  var a=getSaved(),h='<h3>Conferências salvas</h3>';
+  if(!a.length){h+='<p class="hint" style="margin:0">Nada salvo ainda. Confira o instrumento, mova o Trex, e toque em “Salvar conferência” para registrar cada ponto.</p>';}
+  a.slice().reverse().forEach(function(it,j){
+    var i=a.length-1-j;
+    h+='<div class="srow"><div><div class="t">'+esc(it.tag||'(sem TAG)')+' · '+esc(it.tipo||'')+'</div>'+
+      '<div class="d">'+fmtDt(it.t)+'</div><div class="st">'+(it.status==='ok'?'✓ ':it.status==='div'?'⚠ ':'… ')+esc(it.summary||'')+'</div></div>'+
+      '<div class="acts"><button class="btn" data-open="'+i+'">Abrir</button><button class="btn" data-del="'+i+'">Excluir</button></div></div>';
+  });
+  $('#saved').innerHTML=h;
+}
+function saveCur(){
+  var R=FP.compute(FP.fromForm(S));
+  var a=getSaved();
+  a.push({t:Date.now(),tag:S.tag||'',tipo:S.tipo,status:R.status,summary:R.summary+(R.hyp?' (hipótese)':''),text:lastText,S:JSON.parse(JSON.stringify(S))});
+  var ok=setSaved(a);
+  $('#svOk').textContent=ok?'Salvo em '+fmtDt(Date.now())+'.':'Não foi possível salvar.';
+  renderSaved();
+}
+
 function update(){vis();fillSelects();pushToInputs();render();save();}
 
 /* ---------- eventos ---------- */
@@ -395,6 +432,11 @@ document.addEventListener('click',function(e){
     var el=$('[data-k="'+ks[0]+'"]'); if(el){el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){el.focus()},350);}
     return;
   }
+  if(e.target.id==='bSave'){saveCur();return;}
+  var bo=e.target.closest&&e.target.closest('[data-open]');
+  if(bo){var it=getSaved()[+bo.getAttribute('data-open')];if(it){S=JSON.parse(JSON.stringify(it.S));update();window.scrollTo({top:0,behavior:'smooth'});}return;}
+  var bd=e.target.closest&&e.target.closest('[data-del]');
+  if(bd){if(confirm('Excluir esta conferência salva?')){var a=getSaved();a.splice(+bd.getAttribute('data-del'),1);setSaved(a);renderSaved();}return;}
   if(e.target.id==='bCopy'){
     var done=function(ok){$('#cpOk').textContent=ok?'Copiado.':'Não foi possível copiar.';};
     if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(lastText).then(function(){done(true)},function(){done(false)});
@@ -404,7 +446,7 @@ document.addEventListener('click',function(e){
 $('#bEx').onclick=function(){S=JSON.parse(JSON.stringify(EX));update();window.scrollTo({top:0,behavior:'smooth'});};
 $('#bClr').onclick=function(){if(confirm('Limpar todos os campos?')){S=defaults(S.tipo||'FT');update();}};
 
-load(); update();
+load(); update(); renderSaved();
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}
 })();
 </script>

@@ -107,7 +107,7 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   <section class="panel">
     <div class="ph">① Instrumento <small>Trex</small></div>
     <div class="pb">
-      <div class="fld"><label>Variável de saída</label><select data-k="in.var"></select></div>
+      <div class="fld"><label>Variável de saída do instrumento</label><select data-k="in.var"></select></div>
       <div class="row">
         <div class="fld"><label>Unidade</label><select data-k="in.unit" class="unit"></select></div>
       </div>
@@ -221,8 +221,9 @@ var EX={tipo:'FT',tag:'FT-EXEMPLO','fp.var':'vazao','fp.unit':'L/h','fp.lo':'0',
  'in.var':'vazao','in.unit':'m³/h','in.lo':'0','in.hi':'150','in.rkind':'valor','in.read':'75',
  'sd.src':'420','sd.var':'vazao','sd.unit':'L/h','sd.lo':'0','sd.hi':'100.000','sd.calc':'none','sd.conf':true};
 
+var ALLVARS=['vazao','dp','pressao'].map(function(v){return '<option value="'+v+'">'+FP.VARS[v].label+'</option>'}).join('');
 function varOptions(tipo,blank){
-  var o=tipo==='PT'?['pressao']:['vazao','dp'];
+  var o=blank?['vazao','dp','pressao']:tipo==='PT'?['pressao','dp']:['vazao','dp'];
   var h=blank?'<option value="">igual ao faceplate / não sei</option>':'';
   return h+o.map(function(v){return '<option value="'+v+'">'+FP.VARS[v].label+'</option>'}).join('');
 }
@@ -235,8 +236,12 @@ function unitVar(k){
   }
 }
 function fillSelects(){
-  $$('select[data-k="fp.var"],select[data-k="in.var"]').forEach(function(s){s.innerHTML=varOptions(S.tipo,false)});
-  $('select[data-k="sd.var"]').innerHTML=varOptions(S.tipo,true);
+  var fo=$('select[data-k="fp.var"]');
+  if(!fo.getAttribute('data-h')){fo.innerHTML=ALLVARS;fo.setAttribute('data-h','1');}
+  var io=$('select[data-k="in.var"]'),ih=varOptions(S.tipo,false);
+  if(io.getAttribute('data-h')!==ih){io.innerHTML=ih;io.setAttribute('data-h',ih);}
+  var so=$('select[data-k="sd.var"]');
+  if(!so.getAttribute('data-h')){so.innerHTML='<option value="">igual ao faceplate / não sei</option>'+ALLVARS;so.setAttribute('data-h','1');}
   $$('select.unit').forEach(function(s){
     var k=s.getAttribute('data-k'), v=unitVar(k)||'vazao';
     var list=FP.unitsFor(v);
@@ -257,7 +262,7 @@ function vis(){
   var fpv=S['fp.var'],inv=S['in.var'],src=S['sd.src'],calc=S['sd.calc'];
   $$('[data-show]').forEach(function(el){
     var w=el.getAttribute('data-show'),on=true;
-    if(w==='dpq')on=(fpv==='vazao'&&inv==='dp');
+    if(w==='dpq')on=(fpv==='vazao'&&(inv==='dp'||inv==='pressao'));
     if(w==='hart')on=src==='hart';
     if(w==='scale')on=src!=='hart'||calc==='raiz'||calc==='linear';
     if(w==='lin')on=calc==='linear';
@@ -393,7 +398,7 @@ document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('button[data-k]');
   if(b){
     var k=b.getAttribute('data-k'),v=b.getAttribute('data-v');
-    if(k==='tipo'){ if(S.tipo!==v){var tag=S.tag;S=defaults(v);S.tag=tag;} }
+    if(k==='tipo'){ if(S.tipo!==v){S.tipo=v;S['in.var']=v==='PT'?'pressao':'vazao';S['in.unit']='';} }
     else S[k]=v;
     update(); return;
   }

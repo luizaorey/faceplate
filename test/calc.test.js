@@ -158,3 +158,19 @@ test('fromForm', () => {
   assert.strictEqual(m.fp.hi, 100000);
   assert.strictEqual(compute(m).status, 'div');
 });
+
+test('PT em campo (pressão) × vazão no SDCD/faceplate', () => {
+  const m = {
+    fp: { var: 'vazao', unit: 'm³/h', lo: 0, hi: 150 },
+    inst: { var: 'pressao', unit: 'kPa', lo: 0, hi: 25, mode: 'linear', q: { unit: 'm³/h', hi: 150 } },
+    reading: {}, ds: {}, sd: { src: '420', var: 'dp', calc: 'raiz', conf: true },
+  };
+  assert.strictEqual(compute(m).status, 'ok');
+  m.sd.calc = 'none';
+  assert.strictEqual(compute(m).status, 'insuf'); // entrada em pressão, faceplate em vazão, sem cálculo
+});
+
+test('FT em campo mas faceplate em pressão = não compara', () => {
+  const m = base(); m.fp = { var: 'pressao', unit: 'kPa', lo: 0, hi: 100 };
+  assert.strictEqual(compute(m).status, 'insuf');
+});

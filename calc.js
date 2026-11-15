@@ -91,8 +91,9 @@
 
     // --- compatibilidade faceplate × instrumento
     let kind = null; // 'same' | 'dp2q'
-    if (fp.var === inst.var) kind = 'same';
-    else if (fp.var === 'vazao' && inst.var === 'dp') kind = 'dp2q';
+    const isP = (v) => v === 'dp' || v === 'pressao';
+    if ((fp.var === 'vazao' && inst.var === 'vazao') || (isP(fp.var) && isP(inst.var))) kind = 'same';
+    else if (fp.var === 'vazao' && isP(inst.var)) kind = 'dp2q';
     else miss('in.var', 'Instrumento: a variável de saída (' + (VARLABEL[inst.var] || '?') + ') não se compara com o faceplate (' + (VARLABEL[fp.var] || '?') + ')');
     R.kind = kind;
 
@@ -123,7 +124,7 @@
     if (calc === 'linear' && !isN(sd.a)) miss('sd.a', 'SDCD: ganho (a) do escalonamento linear  saída = a·entrada + b');
     const b = isN(sd.b) ? sd.b : 0;
 
-    if (sd.var && kind && calc === 'none' && sd.var !== fp.var && srcEff === '420') {
+    if (sd.var && kind && calc === 'none' && (sd.var === 'vazao') !== (fp.var === 'vazao') && srcEff === '420') {
       miss('sd.calc', 'Entrada do SDCD em ' + VARLABEL[sd.var] + ' e faceplate em ' + VARLABEL[fp.var] + ' sem bloco de cálculo: informe qual cálculo é aplicado');
     }
     if (srcEff === 'hart') {
@@ -156,7 +157,7 @@
     const sq = (x) => (x < 0 ? -(x * x) : x * x);
     const sr = (x) => Math.sqrt(Math.max(x, 0));
     const span = inst.hi - inst.lo;
-    const rootTx = inst.var === 'dp' && inst.mode === 'raiz';
+    const rootTx = kind === 'dp2q' && inst.mode === 'raiz';
     const instVal = (mA) => inst.lo + span * (rootTx ? sq(fr(mA)) : fr(mA)); // na unidade do instrumento
     const qhFp = kind === 'dp2q' ? conv(q.hi, q.unit, fp.unit) : NaN;
     const Ifp = (mA) => // o que o instrumento representa, na variável/unidade do faceplate
@@ -196,7 +197,7 @@
     if (srcEff === 'hart') {
       R.warn.push('HART digital: a faixa 4–20 mA não altera a leitura do SDCD. Conferem unidade, variável e conversão; não há "faixa equivalente".');
     } else if (kind === 'same' && calc !== 'raiz') {
-      if (rootTx && fp.var === 'dp') R.warn.push('Transmissor com saída em raiz quadrada e faceplate em ΔP: a raiz deveria estar desligada.');
+      if (inst.mode === 'raiz' && kind === 'same' && inst.var !== 'vazao') R.warn.push('Transmissor com saída em raiz quadrada e faceplate em ΔP: a raiz deveria estar desligada.');
       const lo = conv(dcs(4).D, fp.unit, inst.unit), hi = conv(dcs(20).D, fp.unit, inst.unit);
       eq = { lo, hi, unit: inst.unit, extra: [] };
     } else if (kind === 'same' && calc === 'raiz') {

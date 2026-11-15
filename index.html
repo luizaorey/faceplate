@@ -307,8 +307,8 @@ function render(){
        (R.warn.length?esc(R.warn[0]):'Sem faixa linear equivalente para esta configuração.')+'</p></div>';
   }
   if(R.kind==='dp2q'&&M.inst.q&&isFinite(M.inst.q.hi)){
-    var qf=FP.conv(M.fp.hi,fu,M.inst.q.unit), qok=Math.abs(qf-M.inst.q.hi)<=R.tolPct/100*Math.abs(M.inst.q.hi);
-    h+='<div class="box"><h3>Folha de dados · vazão em 20 mA</h3><div class="big mono">'+fmt(M.inst.q.hi)+'<span class="u">'+esc(M.inst.q.unit)+'</span></div><p>Faceplate em 20 mA: '+fmt(qf)+' '+esc(M.inst.q.unit)+' — '+(qok?'confere com a folha de dados.':'não confere com a folha de dados.')+'</p></div>';
+    var qf=FP.conv(R.points[4].D,fu,M.inst.q.unit), qok=Math.abs(qf-M.inst.q.hi)<=R.tolPct/100*Math.abs(M.inst.q.hi);
+    h+='<div class="box"><h3>Folha de dados · vazão em 20 mA</h3><div class="big mono">'+fmt(M.inst.q.hi)+'<span class="u">'+esc(M.inst.q.unit)+'</span></div><p>Vazão em 20 mA pelo SDCD: '+fmt(qf)+' '+esc(M.inst.q.unit)+' — '+(qok?'confere com a folha de dados.':'não confere com a folha de dados.')+'</p></div>';
   } else if(R.ds){
     h+='<div class="box"><h3>Folha de dados</h3><div class="big mono">'+fmt(M.ds.lo)+' a '+fmt(M.ds.hi)+'<span class="u">'+esc(M.ds.unit)+'</span></div><p>'+esc(R.ds.text)+'</p></div>';
   } else {

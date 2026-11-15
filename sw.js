@@ -1,4 +1,4 @@
-var CACHE = "faceplate-v9";
+var CACHE = "faceplate-v10";
 var ARQ = ["./", "./index.html", "./calc.js", "./manifest.webmanifest",
            "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
@@ -14,7 +14,7 @@ self.addEventListener("activate", function(e){
 self.addEventListener("fetch", function(e){
   if(e.request.method !== "GET") return;
   e.respondWith(
-    fetch(e.request).then(function(res){
+    fetch(e.request, {cache: "no-cache"}).then(function(res){
       var copia = res.clone();
       caches.open(CACHE).then(function(c){ c.put(e.request, copia); });
       return res;

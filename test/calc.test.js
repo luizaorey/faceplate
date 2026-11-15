@@ -115,7 +115,7 @@ test('dados insuficientes: ΔP sem local da raiz e sem vazão correspondente', (
   const r = compute(m);
   assert.strictEqual(r.status, 'insuf');
   const ids = r.miss.map((x) => x.id);
-  assert.ok(ids.includes('in.mode') && ids.includes('ds.hi'));
+  assert.ok(ids.includes('in.mode') && ids.includes('fp.hi'));
 });
 
 test('dados insuficientes: faixa do faceplate vazia', () => {
@@ -175,22 +175,19 @@ test('FT em campo mas faceplate em pressão = não compara', () => {
   assert.strictEqual(compute(m).status, 'insuf');
 });
 
-test('formulário: instrumento em pressão + SDCD em vazão = chave de raiz no SDCD', () => {
+test('formulário: instrumento em pressão + SDCD em vazão: a chave de raiz decide', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '150', 'in.unit': 'mmH₂O', 'in.lo': '0', 'in.hi': '2500',
-    'ds.unit': 'm³/h', 'ds.hi': '150', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'sim' };
-  let r = compute(fromForm(f));
-  assert.strictEqual(r.status, 'ok');
-  f['fp.hi'] = '100'; r = compute(fromForm(f));
-  assert.strictEqual(r.status, 'div');
-  near(r.equiv.hi, 2500 * Math.pow(100 / 150, 2), 1e-6);
-  delete f['ds.hi']; r = compute(fromForm(f));
-  assert.strictEqual(r.status, 'insuf');
-  assert.deepStrictEqual(r.miss.map((x) => x.id), ['ds.hi']);
+    'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'sim' };
+  assert.strictEqual(compute(fromForm(f)).status, 'ok');
+  f['sd.raiz'] = 'nao';
+  assert.strictEqual(compute(fromForm(f)).status, 'div');
+  f['fp.hi'] = ''; f['sd.raiz'] = 'sim';
+  assert.strictEqual(compute(fromForm(f)).status, 'insuf');
 });
 
 test('chave de raiz: Não extrair dá divergência, Extrair confere', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'fp.val': '141,4', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '50',
-    'ds.unit': 'm³/h', 'ds.hi': '200', 'in.rkind': 'valor', 'in.read': '25', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'nao' };
+    'in.rkind': 'valor', 'in.read': '25', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'nao' };
   assert.strictEqual(compute(fromForm(f)).status, 'div');
   f['sd.raiz'] = 'sim';
   const r = compute(fromForm(f));
@@ -200,18 +197,15 @@ test('chave de raiz: Não extrair dá divergência, Extrair confere', () => {
 
 test('raiz no SDCD usa a faixa de vazão informada no SDCD (não a do faceplate)', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '50',
-    'ds.unit': 'm³/h', 'ds.hi': '200', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'sim',
+    'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'sim',
     'sd.unit': 'L/h', 'sd.lo': '0', 'sd.hi': '150.000' };
   const r = compute(fromForm(f));
-  assert.strictEqual(r.status, 'div');
-  near(r.points[4].D, 150, 1e-6);
-  near(r.equiv.hi, 50 * Math.pow(150 / 200, 2), 1e-6);
-  f['sd.hi'] = '200.000';
-  assert.strictEqual(compute(fromForm(f)).status, 'ok');
+  assert.strictEqual(r.status, 'ok');
+  near(r.points[4].D, 150, 1e-6); // o SDCD calcula até 150 m³/h, mesmo com faceplate 0–200
 });
 
 test('HART + raiz no SDCD', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '50',
-    'ds.unit': 'm³/h', 'ds.hi': '200', 'sd.src': 'hart', 'sd.hart': 'PV', 'sd.conf': true, 'sd.raiz': 'sim', 'sd.unit': 'm³/h', 'sd.lo': '0', 'sd.hi': '200' };
+    'sd.src': 'hart', 'sd.hart': 'PV', 'sd.conf': true, 'sd.raiz': 'sim', 'sd.unit': 'm³/h', 'sd.lo': '0', 'sd.hi': '200' };
   assert.strictEqual(compute(fromForm(f)).status, 'ok');
 });

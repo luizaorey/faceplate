@@ -117,12 +117,12 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
       <div class="sub">Leitura atual</div>
       <div class="seg" style="margin-bottom:9px"><button data-k="in.rkind" data-v="valor">Valor</button><button data-k="in.rkind" data-v="ma">Corrente (mA)</button></div>
       <div class="fld"><input type="text" inputmode="decimal" data-k="in.read" placeholder="opcional" autocomplete="off"></div>
-      <div class="sub" id="dsT">Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small></div>
-      <div class="row" data-show="dslo">
+      <div data-show="dsblock"><div class="sub" id="dsT">Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small></div>
+      <div class="row">
         <div class="fld"><label>Início</label><input type="text" inputmode="decimal" data-k="ds.lo" autocomplete="off"></div>
         <div class="fld"><label id="dsHiL">Fim</label><input type="text" inputmode="decimal" data-k="ds.hi" autocomplete="off"></div>
       </div>
-      <div class="fld"><label>Unidade</label><select data-k="ds.unit" class="unit"></select></div>
+      <div class="fld"><label>Unidade</label><select data-k="ds.unit" class="unit"></select></div></div>
     </div>
   </section>
 
@@ -248,14 +248,12 @@ function vis(){
     if(w==='hart')on=src==='hart';
     if(w==='scale')on=dq||src!=='hart'||calc==='linear';
     if(w==='lin')on=calc==='linear'&&!dq;
-    if(w==='dslo')on=!dq;
+    if(w==='dsblock')on=!dq;
     el.classList.toggle('hide',!on);
   });
   $('#sdLo').textContent=dq?'Vazão no SDCD · início':'Escala · início';
   $('#sdHi').textContent=dq?'Vazão no SDCD · fim':'Escala · fim';
   $('#sdU').textContent=dq?'Unidade da vazão':'Unidade da escala';
-  $('#dsT').innerHTML=dq?'Folha de dados · vazão correspondente ao ΔP máximo':'Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small>';
-  $('#dsHiL').textContent=dq?'Vazão em 20 mA':'Fim';
   var ch=$('#chkConf'); ch.classList.toggle('dis',src==='desc');
   if(src==='desc'&&S['sd.conf']){S['sd.conf']=false;}
 }
@@ -306,9 +304,8 @@ function render(){
     h+='<div class="box dim"><h3>Faixa equivalente à escala do SDCD</h3><div class="big">Não se aplica</div><p>'+
        (R.warn.length?esc(R.warn[0]):'Sem faixa linear equivalente para esta configuração.')+'</p></div>';
   }
-  if(R.kind==='dp2q'&&M.inst.q&&isFinite(M.inst.q.hi)){
-    var qf=FP.conv(R.points[4].D,fu,M.inst.q.unit), qok=Math.abs(qf-M.inst.q.hi)<=R.tolPct/100*Math.abs(M.inst.q.hi);
-    h+='<div class="box"><h3>Folha de dados · vazão em 20 mA</h3><div class="big mono">'+fmt(M.inst.q.hi)+'<span class="u">'+esc(M.inst.q.unit)+'</span></div><p>Vazão em 20 mA pelo SDCD: '+fmt(qf)+' '+esc(M.inst.q.unit)+' — '+(qok?'confere com a folha de dados.':'não confere com a folha de dados.')+'</p></div>';
+  if(R.kind==='dp2q'){
+    h+='<div class="box dim"><h3>Folha de dados</h3><div class="big">Não se aplica</div><p>Instrumento em pressão e SDCD em vazão: a vazão em 20 mA é a do SDCD.</p></div>';
   } else if(R.ds){
     h+='<div class="box"><h3>Folha de dados</h3><div class="big mono">'+fmt(M.ds.lo)+' a '+fmt(M.ds.hi)+'<span class="u">'+esc(M.ds.unit)+'</span></div><p>'+esc(R.ds.text)+'</p></div>';
   } else {

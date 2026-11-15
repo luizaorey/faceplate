@@ -103,9 +103,8 @@
     const q = inst.q || {};
     if (kind === 'dp2q') {
       if (inst.mode !== 'linear' && inst.mode !== 'raiz') miss('in.mode', 'Instrumento: onde a raiz quadrada é extraída (no transmissor ou no SDCD)');
-      if (!isN(q.hi) || q.hi <= 0) miss('ds.hi', 'Folha de dados: vazão correspondente ao ΔP máximo (20 mA)');
-      if (!q.unit) miss('ds.unit', 'Folha de dados: unidade da vazão');
-      else if (fp.unit && !sameDim(q.unit, fp.unit)) miss('ds.unit', 'Folha de dados: unidade de vazão de grandeza diferente da do faceplate');
+      if (!isN(q.hi) || q.hi <= 0) miss('fp.hi', 'Faixa de vazão (fim) precisa ser maior que zero');
+      if (q.unit && fp.unit && !sameDim(q.unit, fp.unit)) miss('sd.unit', 'SDCD: unidade da vazão de grandeza diferente da do faceplate');
       if (isN(inst.lo) && inst.lo !== 0) R.warn.push('Relação vazão × ΔP assume ΔP zero-based (4 mA = 0). O início da faixa de ΔP não é zero.');
     }
 
@@ -304,12 +303,14 @@
     const fpVar = s['fp.var'] === 'vazao' ? 'vazao' : 'pressao';
     // instrumento em pressão e SDCD/faceplate em vazão: o usuário diz se o SDCD extrai a raiz (chave sd.raiz)
     const dp2q = fpVar === 'vazao' && instVar === 'pressao';
+    const sdOk = !!(s['sd.unit'] && UNITS[s['sd.unit']] && UNITS[s['sd.unit']].d !== 'p' && n('sd.lo') != null && n('sd.hi') != null && n('sd.hi') > 0);
     return {
       tipo: s.tipo || 'FT',
       fp: { var: fpVar, unit: s['fp.unit'], lo: n('fp.lo'), hi: n('fp.hi'), val: n('fp.val') },
       inst: {
         var: instVar, unit: s['in.unit'], lo: n('in.lo'), hi: n('in.hi'), mode: dp2q ? 'linear' : '',
-        q: dp2q ? { unit: s['ds.unit'], hi: n('ds.hi') } : {},
+        // vazão no fim da faixa de pressão = a vazão do SDCD (ou, sem ela, a do faceplate)
+        q: dp2q ? (sdOk ? { unit: s['sd.unit'], hi: n('sd.hi') } : { unit: s['fp.unit'], hi: n('fp.hi') }) : {},
       },
       reading: { kind: s['in.rkind'] || 'valor', val: n('in.read') },
       ds: dp2q ? {} : { unit: s['ds.unit'], lo: n('ds.lo'), hi: n('ds.hi') },

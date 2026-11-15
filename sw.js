@@ -1,4 +1,4 @@
-var CACHE = "faceplate-v3";
+var CACHE = "faceplate-v4";
 var ARQ = ["./", "./index.html", "./calc.js", "./manifest.webmanifest",
            "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 

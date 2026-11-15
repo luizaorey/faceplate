@@ -115,7 +115,7 @@ test('dados insuficientes: ΔP sem local da raiz e sem vazão correspondente', (
   const r = compute(m);
   assert.strictEqual(r.status, 'insuf');
   const ids = r.miss.map((x) => x.id);
-  assert.ok(ids.includes('in.mode') && ids.includes('in.q.hi'));
+  assert.ok(ids.includes('in.mode') && ids.includes('ds.hi'));
 });
 
 test('dados insuficientes: faixa do faceplate vazia', () => {
@@ -173,4 +173,17 @@ test('PT em campo (pressão) × vazão no SDCD/faceplate', () => {
 test('FT em campo mas faceplate em pressão = não compara', () => {
   const m = base(); m.fp = { var: 'pressao', unit: 'kPa', lo: 0, hi: 100 };
   assert.strictEqual(compute(m).status, 'insuf');
+});
+
+test('formulário: instrumento em pressão + SDCD em vazão = raiz automática no SDCD', () => {
+  const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '150', 'in.unit': 'mmH₂O', 'in.lo': '0', 'in.hi': '2500',
+    'ds.unit': 'm³/h', 'ds.hi': '150', 'sd.src': '420', 'sd.conf': true };
+  let r = compute(fromForm(f));
+  assert.strictEqual(r.status, 'ok');
+  f['fp.hi'] = '100'; r = compute(fromForm(f));
+  assert.strictEqual(r.status, 'div');
+  near(r.equiv.hi, 2500 * Math.pow(100 / 150, 2), 1e-6);
+  delete f['ds.hi']; r = compute(fromForm(f));
+  assert.strictEqual(r.status, 'insuf');
+  assert.deepStrictEqual(r.miss.map((x) => x.id), ['ds.hi']);
 });

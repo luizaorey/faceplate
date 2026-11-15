@@ -107,7 +107,6 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   <section class="panel">
     <div class="ph">① Instrumento <small>Trex</small></div>
     <div class="pb">
-      <div class="fld"><label>Variável de saída do instrumento</label><select data-k="in.var"></select></div>
       <div class="row">
         <div class="fld"><label>Unidade</label><select data-k="in.unit" class="unit"></select></div>
       </div>
@@ -115,26 +114,13 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
         <div class="fld"><label>4 mA (início)</label><input type="text" inputmode="decimal" data-k="in.lo" placeholder="0" autocomplete="off"></div>
         <div class="fld"><label>20 mA (fim)</label><input type="text" inputmode="decimal" data-k="in.hi" placeholder="150" autocomplete="off"></div>
       </div>
-      <div data-show="dpq">
-        <div class="sub">ΔP → vazão</div>
-        <div class="fld"><label>Onde é feita a raiz quadrada?</label>
-          <select data-k="in.mode">
-            <option value="">— escolher —</option>
-            <option value="raiz">No transmissor (sinal proporcional à vazão)</option>
-            <option value="linear">No SDCD (saída linear em ΔP)</option>
-          </select></div>
-        <div class="row">
-          <div class="fld"><label>Vazão em 20 mA (fim do ΔP)</label><input type="text" inputmode="decimal" data-k="in.q.hi" placeholder="150" autocomplete="off"></div>
-          <div class="fld"><label>Unidade</label><select data-k="in.q.unit" class="unit"></select></div>
-        </div>
-      </div>
       <div class="sub">Leitura atual</div>
       <div class="seg" style="margin-bottom:9px"><button data-k="in.rkind" data-v="valor">Valor</button><button data-k="in.rkind" data-v="ma">Corrente (mA)</button></div>
       <div class="fld"><input type="text" inputmode="decimal" data-k="in.read" placeholder="opcional" autocomplete="off"></div>
-      <div class="sub">Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small></div>
-      <div class="row">
+      <div class="sub" id="dsT">Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small></div>
+      <div class="row" data-show="dslo">
         <div class="fld"><label>Início</label><input type="text" inputmode="decimal" data-k="ds.lo" autocomplete="off"></div>
-        <div class="fld"><label>Fim</label><input type="text" inputmode="decimal" data-k="ds.hi" autocomplete="off"></div>
+        <div class="fld"><label id="dsHiL">Fim</label><input type="text" inputmode="decimal" data-k="ds.hi" autocomplete="off"></div>
       </div>
       <div class="fld"><label>Unidade</label><select data-k="ds.unit" class="unit"></select></div>
     </div>
@@ -144,6 +130,9 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   <section class="panel">
     <div class="ph">② Entrada do SDCD <small>configuração</small></div>
     <div class="pb">
+      <div class="fld"><label>O que o SDCD recebe e o faceplate mostra</label>
+        <select data-k="fp.var"><option value="vazao">Vazão (FT)</option><option value="pressao">Pressão (PT)</option></select></div>
+      <p class="hint" data-show="auto">Instrumento em pressão e SDCD em vazão: a raiz quadrada é extraída no SDCD (automático).</p>
       <label>Origem do sinal</label>
       <div class="seg" style="margin-bottom:12px">
         <button data-k="sd.src" data-v="420">4–20 mA</button>
@@ -153,21 +142,19 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
       <div class="fld" data-show="hart"><label>Variável HART selecionada no SDCD</label>
         <select data-k="sd.hart"><option value="">— escolher —</option><option>PV</option><option>SV</option><option>TV</option><option>QV</option></select></div>
       <div data-show="scale">
-        <div class="fld"><label data-lbl="scale">Variável da entrada</label><select data-k="sd.var"></select></div>
         <div class="row">
           <div class="fld"><label>Escala · início</label><input type="text" inputmode="decimal" data-k="sd.lo" autocomplete="off"></div>
           <div class="fld"><label>Escala · fim</label><input type="text" inputmode="decimal" data-k="sd.hi" autocomplete="off"></div>
         </div>
         <div class="fld"><label>Unidade da escala</label><select data-k="sd.unit" class="unit"></select></div>
       </div>
-      <div class="sub" data-lbl="calc">Bloco de cálculo entre a entrada e o faceplate</div>
+      <div data-show="calcsel"><div class="sub">Bloco de cálculo entre a entrada e o faceplate</div>
       <div class="fld"><select data-k="sd.calc">
         <option value="none">Nenhum (entrada analógica direta)</option>
-        <option value="raiz">Extração de raiz quadrada</option>
         <option value="linear">Escalonamento linear (a·x + b)</option>
         <option value="outro">Outro cálculo</option>
         <option value="desconhecido">Não sei</option>
-      </select></div>
+      </select></div></div>
       <div class="row" data-show="lin">
         <div class="fld"><label>Ganho a</label><input type="text" inputmode="decimal" data-k="sd.a" placeholder="1" autocomplete="off"></div>
         <div class="fld"><label>Offset b <small>(un. do faceplate)</small></label><input type="text" inputmode="decimal" data-k="sd.b" placeholder="0" autocomplete="off"></div>
@@ -180,7 +167,6 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   <section class="panel">
     <div class="ph">③ Faceplate <small>o que o operador vê</small></div>
     <div class="pb">
-      <div class="fld"><label>Variável</label><select data-k="fp.var"></select></div>
       <div class="fld"><label>Unidade</label><select data-k="fp.unit" class="unit"></select></div>
       <div class="row">
         <div class="fld"><label>Faixa · início</label><input type="text" inputmode="decimal" data-k="fp.lo" placeholder="0" autocomplete="off"></div>
@@ -209,7 +195,7 @@ var fmt=FP.fmt;
 
 function defaults(tipo){
   var v=tipo==='PT'?'pressao':'vazao';
-  return {tipo:tipo,tag:'','fp.var':v,'in.var':v,'in.rkind':'valor','sd.src':'420','sd.calc':'none','sd.conf':false};
+  return {tipo:tipo,tag:'','fp.var':v,'in.rkind':'valor','sd.src':'420','sd.calc':'none','sd.conf':false};
 }
 function load(){
   try{var t=localStorage.getItem(KEY); if(t) S=JSON.parse(t);}catch(e){}
@@ -218,33 +204,26 @@ function load(){
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 var EX={tipo:'FT',tag:'FT-EXEMPLO','fp.var':'vazao','fp.unit':'L/h','fp.lo':'0','fp.hi':'100.000','fp.val':'50.000',
- 'in.var':'vazao','in.unit':'m³/h','in.lo':'0','in.hi':'150','in.rkind':'valor','in.read':'75',
- 'sd.src':'420','sd.var':'vazao','sd.unit':'L/h','sd.lo':'0','sd.hi':'100.000','sd.calc':'none','sd.conf':true};
+ 'in.unit':'m³/h','in.lo':'0','in.hi':'150','in.rkind':'valor','in.read':'75',
+ 'sd.src':'420','sd.unit':'L/h','sd.lo':'0','sd.hi':'100.000','sd.calc':'none','sd.conf':true};
 
-var ALLVARS=['vazao','dp','pressao'].map(function(v){return '<option value="'+v+'">'+FP.VARS[v].label+'</option>'}).join('');
-function varOptions(tipo,blank){
-  var o=blank?['vazao','dp','pressao']:tipo==='PT'?['pressao','dp']:['vazao','dp'];
-  var h=blank?'<option value="">igual ao faceplate / não sei</option>':'';
-  return h+o.map(function(v){return '<option value="'+v+'">'+FP.VARS[v].label+'</option>'}).join('');
-}
-function unitVar(k){
+function allUnits(){return Object.keys(FP.UNITS);}
+function instPressure(){var u=FP.UNITS[S['in.unit']];return !!u&&u.d==='p';}
+function isDp2q(){return S['fp.var']==='vazao'&&instPressure();}
+function unitList(k){
   switch(k){
-    case 'fp.unit':return S['fp.var'];
-    case 'in.unit':case 'ds.unit':return S['in.var'];
-    case 'in.q.unit':return 'vazao';
-    case 'sd.unit':return S['sd.var']||S['fp.var'];
+    case 'fp.unit':return FP.unitsFor(S['fp.var']==='vazao'?'vazao':'pressao');
+    case 'in.unit':return allUnits();
+    case 'ds.unit':
+      if(isDp2q())return FP.unitsFor('vazao');
+      return S['in.unit']?FP.unitsFor(instPressure()?'pressao':'vazao'):allUnits();
+    case 'sd.unit':return isDp2q()?allUnits():FP.unitsFor(S['fp.var']==='vazao'?'vazao':'pressao');
   }
+  return allUnits();
 }
 function fillSelects(){
-  var fo=$('select[data-k="fp.var"]');
-  if(!fo.getAttribute('data-h')){fo.innerHTML=ALLVARS;fo.setAttribute('data-h','1');}
-  var io=$('select[data-k="in.var"]'),ih=varOptions(S.tipo,false);
-  if(io.getAttribute('data-h')!==ih){io.innerHTML=ih;io.setAttribute('data-h',ih);}
-  var so=$('select[data-k="sd.var"]');
-  if(!so.getAttribute('data-h')){so.innerHTML='<option value="">igual ao faceplate / não sei</option>'+ALLVARS;so.setAttribute('data-h','1');}
   $$('select.unit').forEach(function(s){
-    var k=s.getAttribute('data-k'), v=unitVar(k)||'vazao';
-    var list=FP.unitsFor(v);
+    var k=s.getAttribute('data-k'), list=unitList(k);
     var html='<option value="">—</option>'+list.map(function(u){return '<option>'+u+'</option>'}).join('');
     if(s.getAttribute('data-h')!==html){s.innerHTML=html;s.setAttribute('data-h',html);}
     if(S[k]&&list.indexOf(S[k])<0){S[k]='';}
@@ -259,16 +238,19 @@ function pushToInputs(){
   });
 }
 function vis(){
-  var fpv=S['fp.var'],inv=S['in.var'],src=S['sd.src'],calc=S['sd.calc'];
+  var src=S['sd.src'],calc=S['sd.calc'],dq=isDp2q();
   $$('[data-show]').forEach(function(el){
     var w=el.getAttribute('data-show'),on=true;
-    if(w==='dpq')on=(fpv==='vazao'&&(inv==='dp'||inv==='pressao'));
+    if(w==='auto')on=dq;
+    if(w==='calcsel')on=!dq;
     if(w==='hart')on=src==='hart';
-    if(w==='scale')on=src!=='hart'||calc==='raiz'||calc==='linear';
-    if(w==='lin')on=calc==='linear';
+    if(w==='scale')on=src!=='hart'||calc==='linear'||dq;
+    if(w==='lin')on=calc==='linear'&&!dq;
+    if(w==='dslo')on=!dq;
     el.classList.toggle('hide',!on);
   });
-  var sl=$('[data-lbl="scale"]'); sl.textContent=src==='hart'?'Variável usada na conversão':'Variável da entrada';
+  $('#dsT').innerHTML=dq?'Folha de dados · vazão correspondente ao ΔP máximo':'Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small>';
+  $('#dsHiL').textContent=dq?'Vazão em 20 mA':'Fim';
   var ch=$('#chkConf'); ch.classList.toggle('dis',src==='desc');
   if(src==='desc'&&S['sd.conf']){S['sd.conf']=false;}
 }
@@ -319,7 +301,10 @@ function render(){
     h+='<div class="box dim"><h3>Faixa equivalente à escala do SDCD</h3><div class="big">Não se aplica</div><p>'+
        (R.warn.length?esc(R.warn[0]):'Sem faixa linear equivalente para esta configuração.')+'</p></div>';
   }
-  if(R.ds){
+  if(R.kind==='dp2q'&&M.inst.q&&isFinite(M.inst.q.hi)){
+    var qf=FP.conv(M.fp.hi,fu,M.inst.q.unit), qok=Math.abs(qf-M.inst.q.hi)<=R.tolPct/100*Math.abs(M.inst.q.hi);
+    h+='<div class="box"><h3>Folha de dados · vazão em 20 mA</h3><div class="big mono">'+fmt(M.inst.q.hi)+'<span class="u">'+esc(M.inst.q.unit)+'</span></div><p>Faceplate em 20 mA: '+fmt(qf)+' '+esc(M.inst.q.unit)+' — '+(qok?'confere com a folha de dados.':'não confere com a folha de dados.')+'</p></div>';
+  } else if(R.ds){
     h+='<div class="box"><h3>Folha de dados</h3><div class="big mono">'+fmt(M.ds.lo)+' a '+fmt(M.ds.hi)+'<span class="u">'+esc(M.ds.unit)+'</span></div><p>'+esc(R.ds.text)+'</p></div>';
   } else {
     h+='<div class="box dim"><h3>Folha de dados</h3><div class="big">Não informada</div><p>Preencha para ver qual faixa corresponde à especificação do TAG.</p></div>';
@@ -398,7 +383,7 @@ document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('button[data-k]');
   if(b){
     var k=b.getAttribute('data-k'),v=b.getAttribute('data-v');
-    if(k==='tipo'){ if(S.tipo!==v){S.tipo=v;S['in.var']=v==='PT'?'pressao':'vazao';S['in.unit']='';} }
+    if(k==='tipo'){ if(S.tipo!==v){S.tipo=v;} }
     else S[k]=v;
     update(); return;
   }

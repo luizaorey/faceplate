@@ -103,9 +103,9 @@
     const q = inst.q || {};
     if (kind === 'dp2q') {
       if (inst.mode !== 'linear' && inst.mode !== 'raiz') miss('in.mode', 'Instrumento: onde a raiz quadrada é extraída (no transmissor ou no SDCD)');
-      if (!isN(q.hi) || q.hi <= 0) miss('in.q.hi', 'Instrumento: vazão correspondente ao fim da faixa de ΔP (20 mA)');
-      if (!q.unit) miss('in.q.unit', 'Instrumento: unidade da vazão correspondente');
-      else if (fp.unit && !sameDim(q.unit, fp.unit)) miss('in.q.unit', 'Vazão correspondente: unidade de grandeza diferente da do faceplate');
+      if (!isN(q.hi) || q.hi <= 0) miss('ds.hi', 'Folha de dados: vazão correspondente ao ΔP máximo (20 mA)');
+      if (!q.unit) miss('ds.unit', 'Folha de dados: unidade da vazão');
+      else if (fp.unit && !sameDim(q.unit, fp.unit)) miss('ds.unit', 'Folha de dados: unidade de vazão de grandeza diferente da do faceplate');
       if (isN(inst.lo) && inst.lo !== 0) R.warn.push('Relação vazão × ΔP assume ΔP zero-based (4 mA = 0). O início da faixa de ΔP não é zero.');
     }
 
@@ -294,18 +294,24 @@
   // ---------- adaptador: campos do formulário (texto) → modelo numérico ----------
   function fromForm(s) {
     const n = (k) => parseNum(s[k]);
+    const iu = UNITS[s['in.unit']];
+    const instVar = iu && iu.d === 'p' ? 'pressao' : 'vazao';
+    const fpVar = s['fp.var'] === 'vazao' ? 'vazao' : 'pressao';
+    // instrumento em pressão e SDCD/faceplate em vazão: a raiz é extraída no SDCD (automático)
+    const dp2q = fpVar === 'vazao' && instVar === 'pressao';
     return {
       tipo: s.tipo || 'FT',
-      fp: { var: s['fp.var'], unit: s['fp.unit'], lo: n('fp.lo'), hi: n('fp.hi'), val: n('fp.val') },
+      fp: { var: fpVar, unit: s['fp.unit'], lo: n('fp.lo'), hi: n('fp.hi'), val: n('fp.val') },
       inst: {
-        var: s['in.var'], unit: s['in.unit'], lo: n('in.lo'), hi: n('in.hi'), mode: s['in.mode'] || '',
-        q: { unit: s['in.q.unit'], hi: n('in.q.hi') },
+        var: instVar, unit: s['in.unit'], lo: n('in.lo'), hi: n('in.hi'), mode: dp2q ? 'linear' : '',
+        q: dp2q ? { unit: s['ds.unit'], hi: n('ds.hi') } : {},
       },
       reading: { kind: s['in.rkind'] || 'valor', val: n('in.read') },
-      ds: { unit: s['ds.unit'], lo: n('ds.lo'), hi: n('ds.hi') },
+      ds: dp2q ? {} : { unit: s['ds.unit'], lo: n('ds.lo'), hi: n('ds.hi') },
       sd: {
-        src: s['sd.src'] || 'desc', var: s['sd.var'] || '', unit: s['sd.unit'], lo: n('sd.lo'), hi: n('sd.hi'),
-        calc: s['sd.calc'] || 'none', a: n('sd.a'), b: n('sd.b'), hart: s['sd.hart'] || '', conf: s['sd.conf'] === true || s['sd.conf'] === 'true',
+        src: s['sd.src'] || 'desc', var: '', unit: s['sd.unit'], lo: n('sd.lo'), hi: n('sd.hi'),
+        calc: dp2q ? 'raiz' : (s['sd.calc'] || 'none'), a: n('sd.a'), b: n('sd.b'), hart: s['sd.hart'] || '',
+        conf: s['sd.conf'] === true || s['sd.conf'] === 'true',
       },
     };
   }

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07111b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Faceplate">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Faceplate · Indicação incoerente</title>
+<style>
+:root{
+  --bg:#07111b; --panel:#0e1b29; --line:#23384b; --ink:#eaf4fa; --muted:#90a7b8;
+  --blue:#27a8ff; --cyan:#62d5ff; --amber:#ffbd36; --green:#72d348; --red:#ff685f;
+  --shadow:0 14px 40px rgba(0,0,0,.30);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;color:var(--ink);
+  background:radial-gradient(circle at 45% 0%,#11283c 0,#07111b 42%,#050b12 100%);
+  font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.app{max-width:1180px;margin:0 auto;padding:14px 14px 60px}
+.topbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1px solid #1e5a80;
+  background:linear-gradient(180deg,rgba(10,26,40,.98),rgba(5,15,24,.98));border-radius:14px;padding:12px 16px;box-shadow:var(--shadow)}
+.logo{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:#0a1b2a;display:grid;place-items:center;font-size:22px;color:var(--cyan)}
+.brand h1{font-size:20px;line-height:1;margin:0}
+.brand p{margin:5px 0 0;color:var(--blue);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.top-r{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tagbox{width:150px}
+button{font:inherit}
+.btn{background:#081521;border:1px solid var(--line);color:#b8cad6;border-radius:9px;padding:10px 13px;font-size:13px;cursor:pointer}
+.btn:active{background:#0b2940}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:13px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:linear-gradient(180deg,rgba(14,27,41,.96),rgba(9,20,31,.96));border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
+.ph{padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:13px;letter-spacing:.03em;color:#cfe2ef;display:flex;justify-content:space-between;gap:8px}
+.ph small{font-weight:400;color:#7e96a7}
+.pb{padding:13px 14px}
+label{display:block;color:#b8cad6;font-size:12px;margin-bottom:4px}
+.row{display:flex;gap:10px}
+.fld{flex:1;min-width:0;margin-bottom:11px}
+.fld.w2{flex:2}
+input[type=text],select{width:100%;background:#07131e;border:1px solid var(--line);border-radius:8px;color:#e9f6ff;padding:11px 10px;font-size:16px;font-family:ui-monospace,Menlo,monospace;min-height:44px}
+select{font-family:inherit}
+input::placeholder{color:#47606f}
+.miss{border-color:var(--amber)!important;box-shadow:0 0 0 1px rgba(255,189,54,.35)}
+.seg{display:flex;gap:7px}
+.seg button{flex:1;background:#081521;border:1px solid var(--line);color:#9fb5c4;border-radius:9px;padding:10px 6px;font-size:13px;cursor:pointer;line-height:1.2;min-height:44px}
+.seg button.on{border-color:var(--blue);background:#0b2940;color:var(--cyan)}
+.hint{font-size:11.5px;color:#7892a3;margin:-4px 0 10px}
+.sub{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#6f8a9c;margin:14px 0 8px;border-top:1px dashed var(--line);padding-top:10px}
+.chk{display:flex;gap:10px;align-items:flex-start;background:#081521;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:13px;color:#cfe2ef;cursor:pointer;margin-top:4px}
+.chk input{width:22px;height:22px;margin:0;accent-color:var(--green);flex:none}
+.chk.dis{opacity:.45;pointer-events:none}
+.hide{display:none!important}
+/* resultado */
+.res{margin-top:13px}
+.banner{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:13px;border:1px solid;font-weight:700;font-size:18px}
+.banner .ic{font-size:26px;line-height:1}
+.banner.ok{border-color:#2f6b25;background:#0e2410;color:var(--green)}
+.banner.div{border-color:#7d2c27;background:#2a1110;color:var(--red)}
+.banner.insuf{border-color:#7a5a12;background:#241b08;color:var(--amber)}
+.chip{display:inline-block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--amber);color:var(--amber);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;font-weight:600}
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:13px}
+@media(max-width:900px){.cmp{grid-template-columns:1fr}}
+.box{background:#0a1724;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.box h3{margin:0 0 8px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#8fa9bb;font-weight:600}
+.big{font-size:24px;line-height:1.15;color:var(--cyan)}
+.big .u{font-size:13px;color:#7d95a6;margin-left:4px}
+.big .bad{color:var(--red)}
+.big .good{color:var(--green)}
+.box p{margin:8px 0 0;font-size:12.5px;color:#9fb5c4}
+.box.dim .big{color:#5d7384;font-size:17px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#7e96a7;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;text-align:right;border-bottom:1px solid #162838}
+th:first-child,td:first-child{text-align:left}
+td small{display:block;color:#7d95a6;font-size:11px}
+tr.bad td.d{color:var(--red)} tr.ok td.d{color:var(--green)}
+tr.k td{background:rgba(39,168,255,.06)}
+.tw{overflow-x:auto}
+ul.l{margin:6px 0 0;padding-left:20px;font-size:13.5px;color:#cfe2ef}
+ul.l li{margin:3px 0}
+ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.note{margin-top:13px}
+.foot{margin-top:22px;color:#6f8a9c;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <div class="logo">⌁</div>
+  <div class="brand"><h1>Faceplate</h1><p>Indicação incoerente · FT e PT</p></div>
+  <div class="top-r">
+    <input type="text" class="tagbox" data-k="tag" placeholder="TAG (ex.: FT-1234)" autocapitalize="characters" autocomplete="off">
+    <div class="seg" style="width:130px"><button data-k="tipo" data-v="FT">FT</button><button data-k="tipo" data-v="PT">PT</button></div>
+    <button class="btn" id="bEx">Exemplo</button>
+    <button class="btn" id="bClr">Limpar</button>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- INSTRUMENTO -->
+  <section class="panel">
+    <div class="ph">① Instrumento <small>Trex</small></div>
+    <div class="pb">
+      <div class="fld"><label>Variável de saída</label><select data-k="in.var"></select></div>
+      <div class="row">
+        <div class="fld"><label>Unidade</label><select data-k="in.unit" class="unit"></select></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label>4 mA (início)</label><input type="text" inputmode="decimal" data-k="in.lo" placeholder="0" autocomplete="off"></div>
+        <div class="fld"><label>20 mA (fim)</label><input type="text" inputmode="decimal" data-k="in.hi" placeholder="150" autocomplete="off"></div>
+      </div>
+      <div data-show="dpq">
+        <div class="sub">ΔP → vazão</div>
+        <div class="fld"><label>Onde é feita a raiz quadrada?</label>
+          <select data-k="in.mode">
+            <option value="">— escolher —</option>
+            <option value="raiz">No transmissor (sinal proporcional à vazão)</option>
+            <option value="linear">No SDCD (saída linear em ΔP)</option>
+          </select></div>
+        <div class="row">
+          <div class="fld"><label>Vazão em 20 mA (fim do ΔP)</label><input type="text" inputmode="decimal" data-k="in.q.hi" placeholder="150" autocomplete="off"></div>
+          <div class="fld"><label>Unidade</label><select data-k="in.q.unit" class="unit"></select></div>
+        </div>
+      </div>
+      <div class="sub">Leitura atual</div>
+      <div class="seg" style="margin-bottom:9px"><button data-k="in.rkind" data-v="valor">Valor</button><button data-k="in.rkind" data-v="ma">Corrente (mA)</button></div>
+      <div class="fld"><input type="text" inputmode="decimal" data-k="in.read" placeholder="opcional" autocomplete="off"></div>
+      <div class="sub">Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small></div>
+      <div class="row">
+        <div class="fld"><label>Início</label><input type="text" inputmode="decimal" data-k="ds.lo" autocomplete="off"></div>
+        <div class="fld"><label>Fim</label><input type="text" inputmode="decimal" data-k="ds.hi" autocomplete="off"></div>
+      </div>
+      <div class="fld"><label>Unidade</label><select data-k="ds.unit" class="unit"></select></div>
+    </div>
+  </section>
+
+  <!-- SDCD -->
+  <section class="panel">
+    <div class="ph">② Entrada do SDCD <small>configuração</small></div>
+    <div class="pb">
+      <label>Origem do sinal</label>
+      <div class="seg" style="margin-bottom:12px">
+        <button data-k="sd.src" data-v="420">4–20 mA</button>
+        <button data-k="sd.src" data-v="hart">HART digital</button>
+        <button data-k="sd.src" data-v="desc">Não sei</button>
+      </div>
+      <div class="fld" data-show="hart"><label>Variável HART selecionada no SDCD</label>
+        <select data-k="sd.hart"><option value="">— escolher —</option><option>PV</option><option>SV</option><option>TV</option><option>QV</option></select></div>
+      <div data-show="scale">
+        <div class="fld"><label data-lbl="scale">Variável da entrada</label><select data-k="sd.var"></select></div>
+        <div class="row">
+          <div class="fld"><label>Escala · início</label><input type="text" inputmode="decimal" data-k="sd.lo" autocomplete="off"></div>
+          <div class="fld"><label>Escala · fim</label><input type="text" inputmode="decimal" data-k="sd.hi" autocomplete="off"></div>
+        </div>
+        <div class="fld"><label>Unidade da escala</label><select data-k="sd.unit" class="unit"></select></div>
+      </div>
+      <div class="sub" data-lbl="calc">Bloco de cálculo entre a entrada e o faceplate</div>
+      <div class="fld"><select data-k="sd.calc">
+        <option value="none">Nenhum (entrada analógica direta)</option>
+        <option value="raiz">Extração de raiz quadrada</option>
+        <option value="linear">Escalonamento linear (a·x + b)</option>
+        <option value="outro">Outro cálculo</option>
+        <option value="desconhecido">Não sei</option>
+      </select></div>
+      <div class="row" data-show="lin">
+        <div class="fld"><label>Ganho a</label><input type="text" inputmode="decimal" data-k="sd.a" placeholder="1" autocomplete="off"></div>
+        <div class="fld"><label>Offset b <small>(un. do faceplate)</small></label><input type="text" inputmode="decimal" data-k="sd.b" placeholder="0" autocomplete="off"></div>
+      </div>
+      <label class="chk" id="chkConf"><input type="checkbox" data-k="sd.conf"><span>Conferi estes dados na configuração do SDCD<br><small style="color:#7d95a6">Sem isso, o resultado é tratado como hipótese.</small></span></label>
+    </div>
+  </section>
+
+  <!-- FACEPLATE -->
+  <section class="panel">
+    <div class="ph">③ Faceplate <small>o que o operador vê</small></div>
+    <div class="pb">
+      <div class="fld"><label>Variável</label><select data-k="fp.var"></select></div>
+      <div class="fld"><label>Unidade</label><select data-k="fp.unit" class="unit"></select></div>
+      <div class="row">
+        <div class="fld"><label>Faixa · início</label><input type="text" inputmode="decimal" data-k="fp.lo" placeholder="0" autocomplete="off"></div>
+        <div class="fld"><label>Faixa · fim</label><input type="text" inputmode="decimal" data-k="fp.hi" placeholder="100.000" autocomplete="off"></div>
+      </div>
+      <div class="fld"><label>Valor que aparece agora</label><input type="text" inputmode="decimal" data-k="fp.val" placeholder="opcional" autocomplete="off"></div>
+      <p class="hint">Use vírgula ou ponto nos decimais. “100.000” é lido como cem mil.</p>
+    </div>
+  </section>
+</div>
+
+<div class="res" id="res"></div>
+
+<div class="foot">Conferência e simulação na tela — a configuração do instrumento ou do SDCD é feita separadamente.<br>Os dados ficam só neste aparelho.</div>
+</div>
+
+<script src="calc.js"></script>
+<script>
+(function(){
+'use strict';
+var KEY='faceplate.v1';
+var S={};
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var fmt=FP.fmt;
+
+function defaults(tipo){
+  var v=tipo==='PT'?'pressao':'vazao';
+  return {tipo:tipo,tag:'','fp.var':v,'in.var':v,'in.rkind':'valor','sd.src':'420','sd.calc':'none','sd.conf':false};
+}
+function load(){
+  try{var t=localStorage.getItem(KEY); if(t) S=JSON.parse(t);}catch(e){}
+  if(!S||!S.tipo) S=defaults('FT');
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+var EX={tipo:'FT',tag:'FT-EXEMPLO','fp.var':'vazao','fp.unit':'L/h','fp.lo':'0','fp.hi':'100.000','fp.val':'50.000',
+ 'in.var':'vazao','in.unit':'m³/h','in.lo':'0','in.hi':'150','in.rkind':'valor','in.read':'75',
+ 'sd.src':'420','sd.var':'vazao','sd.unit':'L/h','sd.lo':'0','sd.hi':'100.000','sd.calc':'none','sd.conf':true};
+
+function varOptions(tipo,blank){
+  var o=tipo==='PT'?['pressao']:['vazao','dp'];
+  var h=blank?'<option value="">igual ao faceplate / não sei</option>':'';
+  return h+o.map(function(v){return '<option value="'+v+'">'+FP.VARS[v].label+'</option>'}).join('');
+}
+function unitVar(k){
+  switch(k){
+    case 'fp.unit':return S['fp.var'];
+    case 'in.unit':case 'ds.unit':return S['in.var'];
+    case 'in.q.unit':return 'vazao';
+    case 'sd.unit':return S['sd.var']||S['fp.var'];
+  }
+}
+function fillSelects(){
+  $$('select[data-k="fp.var"],select[data-k="in.var"]').forEach(function(s){s.innerHTML=varOptions(S.tipo,false)});
+  $('select[data-k="sd.var"]').innerHTML=varOptions(S.tipo,true);
+  $$('select.unit').forEach(function(s){
+    var k=s.getAttribute('data-k'), v=unitVar(k)||'vazao';
+    var list=FP.unitsFor(v);
+    s.innerHTML='<option value="">—</option>'+list.map(function(u){return '<option>'+u+'</option>'}).join('');
+    if(S[k]&&list.indexOf(S[k])<0){S[k]='';}
+  });
+}
+function pushToInputs(){
+  $$('[data-k]').forEach(function(el){
+    var k=el.getAttribute('data-k'), v=S[k];
+    if(el.tagName==='BUTTON'){el.classList.toggle('on',S[k]===el.getAttribute('data-v'));}
+    else if(el.type==='checkbox'){el.checked=!!v;}
+    else if(document.activeElement!==el){el.value=v==null?'':v;}
+  });
+}
+function vis(){
+  var fpv=S['fp.var'],inv=S['in.var'],src=S['sd.src'],calc=S['sd.calc'];
+  $$('[data-show]').forEach(function(el){
+    var w=el.getAttribute('data-show'),on=true;
+    if(w==='dpq')on=(fpv==='vazao'&&inv==='dp');
+    if(w==='hart')on=src==='hart';
+    if(w==='scale')on=src!=='hart'||calc==='raiz'||calc==='linear';
+    if(w==='lin')on=calc==='linear';
+    el.classList.toggle('hide',!on);
+  });
+  var sl=$('[data-lbl="scale"]'); sl.textContent=src==='hart'?'Variável usada na conversão':'Variável da entrada';
+  var ch=$('#chkConf'); ch.classList.toggle('dis',src==='desc');
+  if(src==='desc'&&S['sd.conf']){S['sd.conf']=false;}
+}
+
+/* ---------- resultado ---------- */
+var U=function(n,u){return '<span class="mono">'+fmt(n)+'</span> '+u};
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+
+var MISSFIELDS={'sd.lo':['sd.lo','sd.hi','sd.unit'],'fp.hi':['fp.hi'],'in.hi':['in.hi']};
+function markMissing(R){
+  $$('.miss').forEach(function(e){e.classList.remove('miss')});
+  if(R.status!=='insuf')return;
+  R.miss.forEach(function(m){
+    (MISSFIELDS[m.id]||[m.id]).forEach(function(k){
+      var el=$('[data-k="'+k+'"]'); if(el&&el.tagName!=='BUTTON')el.classList.add('miss');
+    });
+  });
+}
+
+var lastText='';
+function render(){
+  var M=FP.fromForm(S), R=FP.compute(M);
+  markMissing(R);
+  var h='',fu=M.fp.unit,iu=M.inst.unit;
+  var ic=R.status==='ok'?'✓':R.status==='div'?'⚠':'…';
+  h+='<div class="banner '+R.status+'"><span class="ic">'+ic+'</span><span>'+esc(R.summary)+
+     (R.hyp&&R.status!=='insuf'?'<span class="chip">hipótese</span>':'')+'</span></div>';
+
+  if(R.status==='insuf'){
+    h+='<div class="box note"><h3>Falta informar</h3><ul class="l">'+R.miss.map(function(m){
+      return '<li><a data-go="'+esc(m.id)+'">'+esc(m.label)+'</a></li>'}).join('')+'</ul></div>';
+    lastText='Dados insuficientes: '+R.miss.map(function(m){return m.label}).join('; ');
+    $('#res').innerHTML=h; return;
+  }
+
+  // 3 caixas: Trex atual | equivalente | folha de dados
+  var rc=R.rangeCmp||{loOk:true,hiOk:true};
+  h+='<div class="cmp">';
+  h+='<div class="box"><h3>Faixa atual no '+esc(M.tipo)+' (Trex)</h3><div class="big mono">'+
+     '<span class="'+(R.rangeCmp?(rc.loOk?'good':'bad'):'')+'">'+fmt(M.inst.lo)+'</span> a <span class="'+(R.rangeCmp?(rc.hiOk?'good':'bad'):'')+'">'+fmt(M.inst.hi)+'</span><span class="u">'+esc(iu)+'</span></div>'+
+     '<p>4 mA = '+fmt(M.inst.lo)+' · 20 mA = '+fmt(M.inst.hi)+' '+esc(iu)+'</p></div>';
+  if(R.equiv){
+    h+='<div class="box"><h3>Faixa equivalente à escala do SDCD'+(R.hyp?'<span class="chip">hipótese</span>':'')+'</h3><div class="big mono">'+
+       fmt(R.equiv.lo)+' a '+fmt(R.equiv.hi)+'<span class="u">'+esc(R.equiv.unit)+'</span></div>'+
+       '<p>É o que o instrumento teria de usar em 4 e 20 mA para o faceplate indicar o mesmo valor.</p>'+
+       R.equiv.extra.map(function(x){return '<p><b>'+esc(x.label)+':</b> '+esc(x.text)+'</p>'}).join('')+'</div>';
+  } else {
+    h+='<div class="box dim"><h3>Faixa equivalente à escala do SDCD</h3><div class="big">Não se aplica</div><p>'+
+       (R.warn.length?esc(R.warn[0]):'Sem faixa linear equivalente para esta configuração.')+'</p></div>';
+  }
+  if(R.ds){
+    h+='<div class="box"><h3>Folha de dados</h3><div class="big mono">'+fmt(M.ds.lo)+' a '+fmt(M.ds.hi)+'<span class="u">'+esc(M.ds.unit)+'</span></div><p>'+esc(R.ds.text)+'</p></div>';
+  } else {
+    h+='<div class="box dim"><h3>Folha de dados</h3><div class="big">Não informada</div><p>Preencha para ver qual faixa corresponde à especificação do TAG.</p></div>';
+  }
+  h+='</div>';
+
+  // confirmar
+  if(R.hyp&&R.confirm.length){
+    h+='<div class="box note"><h3>Confirmar na configuração do SDCD</h3><ul class="l">'+R.confirm.map(function(c){return '<li>'+esc(c)+'</li>'}).join('')+'</ul></div>';
+  }
+
+  // tabela
+  var same=M.fp.var===M.inst.var;
+  h+='<div class="box note"><h3>Conferência por corrente</h3><div class="tw"><table><thead><tr><th>mA</th><th>'+esc(M.tipo)+' (Trex)</th><th>Faceplate pelo SDCD</th><th>'+esc(M.tipo)+' em '+esc(fu)+'</th><th>Diferença</th></tr></thead><tbody>';
+  R.points.forEach(function(p){
+    var eqi=(same||R.kind==='same')?FP.conv(p.D,fu,iu):NaN;
+    h+='<tr class="'+(p.ok?'ok':'bad')+(p.mA===12?' k':'')+'"><td class="mono">'+p.mA+'</td>'+
+      '<td class="mono">'+fmt(p.instVal)+' <small>'+esc(iu)+'</small></td>'+
+      '<td class="mono">'+fmt(p.D)+' <small>'+esc(fu)+(isFinite(eqi)&&fu!==iu?' = '+fmt(eqi)+' '+esc(iu):'')+'</small></td>'+
+      '<td class="mono">'+fmt(p.I)+' <small>'+esc(fu)+'</small></td>'+
+      '<td class="mono d">'+(p.ok?'confere':fmt(p.diff)+' '+esc(fu)+'<small>'+fmt(p.pct,1)+'% do span</small>')+'</td></tr>';
+  });
+  h+='</tbody></table></div><p class="hint" style="margin:8px 0 0">Tolerância: '+fmt(R.tolPct,1)+'% do span do faceplate.</p></div>';
+
+  // leitura
+  var rtxt='';
+  if(R.reading||R.fromFace){
+    h+='<div class="box note"><h3>Leituras informadas</h3><ul class="l">';
+    if(R.reading){
+      var r=R.reading;
+      h+='<li>Trex '+(M.reading.kind==='ma'?'em '+fmt(r.mA,2)+' mA → '+U(r.instVal,iu):U(M.reading.val,iu)+' → corrente esperada <b class="mono">'+fmt(r.mA,2)+' mA</b>')+
+         (r.out?' <b style="color:var(--amber)">(fora de 4–20 mA)</b>':'')+'.</li>';
+      h+='<li>Faceplate deveria mostrar <b>'+U(r.D,fu)+'</b>'+
+         (r.seen!=null?'; operador vê '+U(r.seen,fu)+(Math.abs(r.pct)<=R.tolPct?' — <span style="color:var(--green)">confere</span>':' — diferença de '+U(r.diff,fu)+' ('+fmt(r.pct,1)+'% do span)'):' (valor do faceplate não informado)')+'.</li>';
+      rtxt+='Trex '+fmt(r.instVal)+' '+iu+' ('+fmt(r.mA,2)+' mA) → faceplate esperado '+fmt(r.D)+' '+fu+(r.seen!=null?', visto '+fmt(r.seen)+' '+fu:'');
+    }
+    if(R.fromFace){
+      if(R.fromFace.out) h+='<li>Valor do faceplate fora do que a escala atual consegue representar entre 3 e 21 mA.</li>';
+      else{
+        h+='<li>Com o faceplate em '+U(M.fp.val,fu)+', o sinal seria <b class="mono">'+fmt(R.fromFace.mA,2)+' mA</b> e o Trex deveria ler <b>'+U(R.fromFace.instVal,iu)+'</b>.</li>';
+        if(R.fromFace.dmA!=null&&Math.abs(R.fromFace.dmA)>0.05) h+='<li style="color:var(--amber)">A leitura do Trex e o faceplate não correspondem à mesma corrente (diferença de '+fmt(R.fromFace.dmA,2)+' mA): confirme se foram lidos juntos e no mesmo loop.</li>';
+      }
+    }
+    h+='</ul></div>';
+  }
+
+  if(R.warn.length){
+    h+='<div class="box note"><h3>Atenção</h3><ul class="l">'+R.warn.map(function(w){return '<li>'+esc(w)+'</li>'}).join('')+'</ul></div>';
+  }
+  h+='<div style="margin-top:13px"><button class="btn" id="bCopy">Copiar resumo</button> <span id="cpOk" class="hint"></span></div>';
+  $('#res').innerHTML=h;
+
+  // resumo em texto
+  var t=[];
+  t.push((M.tipo||'')+' '+(S.tag||'')+' — '+R.summary+(R.hyp?' (hipótese)':''));
+  t.push('Faceplate: '+fmt(M.fp.lo)+' a '+fmt(M.fp.hi)+' '+fu+(M.fp.val!=null?' · vendo '+fmt(M.fp.val)+' '+fu:''));
+  t.push('Trex: 4 mA = '+fmt(M.inst.lo)+', 20 mA = '+fmt(M.inst.hi)+' '+iu);
+  if(R.equiv) t.push('Faixa equivalente à escala do SDCD: '+fmt(R.equiv.lo)+' a '+fmt(R.equiv.hi)+' '+R.equiv.unit);
+  if(R.ds) t.push('Folha de dados: '+fmt(M.ds.lo)+' a '+fmt(M.ds.hi)+' '+M.ds.unit+' — '+R.ds.text);
+  var p12=R.points[2]; t.push('Em 12 mA: Trex '+fmt(p12.instVal)+' '+iu+'; faceplate '+fmt(p12.D)+' '+fu);
+  if(rtxt) t.push(rtxt);
+  if(R.hyp&&R.confirm.length) t.push('A confirmar no SDCD: '+R.confirm.join('; '));
+  lastText=t.join('\n');
+}
+
+function update(){vis();fillSelects();pushToInputs();render();save();}
+
+/* ---------- eventos ---------- */
+document.addEventListener('input',function(e){
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k'); if(!k)return;
+  S[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;
+  if(e.target.tagName==='SELECT'&&/\.var$/.test(k)){ /* trocou variável: unidades refazem */ }
+  update();
+});
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('button[data-k]');
+  if(b){
+    var k=b.getAttribute('data-k'),v=b.getAttribute('data-v');
+    if(k==='tipo'){ if(S.tipo!==v){var tag=S.tag;S=defaults(v);S.tag=tag;} }
+    else S[k]=v;
+    update(); return;
+  }
+  var g=e.target.closest&&e.target.closest('a[data-go]');
+  if(g){
+    var id=g.getAttribute('data-go'); var ks=(MISSFIELDS[id]||[id]);
+    var el=$('[data-k="'+ks[0]+'"]'); if(el){el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){el.focus()},350);}
+    return;
+  }
+  if(e.target.id==='bCopy'){
+    var done=function(ok){$('#cpOk').textContent=ok?'Copiado.':'Não foi possível copiar.';};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(lastText).then(function(){done(true)},function(){done(false)});
+    else{var ta=document.createElement('textarea');ta.value=lastText;document.body.appendChild(ta);ta.select();try{done(document.execCommand('copy'))}catch(x){done(false)}ta.remove();}
+  }
+});
+$('#bEx').onclick=function(){S=JSON.parse(JSON.stringify(EX));update();window.scrollTo({top:0,behavior:'smooth'});};
+$('#bClr').onclick=function(){if(confirm('Limpar todos os campos?')){S=defaults(S.tipo||'FT');update();}};
+
+load(); update();
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}
+})();
+</script>
+</body>
+</html>

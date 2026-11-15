@@ -1,0 +1,16 @@
+{
+  "name": "Faceplate",
+  "short_name": "Faceplate",
+  "description": "Conferência de indicação incoerente no faceplate (FT e PT): instrumento × entrada do SDCD × faceplate.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07111b",
+  "theme_color": "#07111b",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -131,9 +131,12 @@
       if (!sd.hart) miss('sd.hart', 'SDCD: variável HART selecionada (PV, SV, TV ou QV)');
       else if (sd.hart !== 'PV') R.warn.push('O SDCD lê ' + sd.hart + ', não a PV. Confirme que é a mesma variável da saída analógica configurada no Trex.');
       if (kind === 'dp2q' && calc === 'none') miss('sd.calc', 'HART digital lê pressão e o faceplate é vazão: marque "Extrair raiz" na chave do SDCD (ou informe a conversão aplicada)');
-      if ((calc === 'raiz' || calc === 'linear') && !hasScale) miss('sd.lo', 'SDCD: faixa (unidade, início, fim) usada na conversão do valor HART');
+      if (calc === 'linear' && !hasScale) miss('sd.lo', 'SDCD: faixa (unidade, início, fim) usada na conversão do valor HART');
     } else if (!hasScale && calc === 'linear') {
       miss('sd.lo', 'SDCD: escala da entrada analógica (unidade, início, fim)');
+    }
+    if (hasScale && calc === 'raiz' && fp.unit && !sameDim(sd.unit, fp.unit)) {
+      miss('sd.unit', 'SDCD: unidade da vazão do bloco de raiz de grandeza diferente da do faceplate');
     }
     if (hasScale && srcEff === '420' && calc === 'none' && fp.unit && !sameDim(sd.unit, fp.unit)) {
       miss('sd.unit', 'SDCD: unidade da escala de grandeza diferente da do faceplate sem bloco de cálculo');
@@ -174,9 +177,11 @@
       let D;
       if (calc === 'none') D = conv(x, xu, fp.unit);
       else if (calc === 'raiz') {
-        const xs = srcEff === 'hart' ? conv(x, xu, sd.unit) : x;
-        const n = srcEff === 'hart' ? (xs - sd.lo) / (sd.hi - sd.lo) : fr(mA);
-        D = fp.lo + (fp.hi - fp.lo) * sr(n);
+        // faixa de vazão do bloco de raiz: a informada no SDCD; sem ela, a do faceplate (hipótese)
+        let ol = fp.lo, oh = fp.hi;
+        if (hasScale && sameDim(sd.unit, fp.unit)) { ol = conv(sd.lo, sd.unit, fp.unit); oh = conv(sd.hi, sd.unit, fp.unit); }
+        const n = srcEff === 'hart' ? (conv(x, xu, inst.unit) - inst.lo) / (inst.hi - inst.lo) : fr(mA);
+        D = ol + (oh - ol) * sr(n);
       } else { // linear
         const xs = sd.unit ? conv(x, xu, sd.unit) : x;
         D = sd.a * (isFinite(xs) ? xs : x) + b;

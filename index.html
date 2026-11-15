@@ -144,10 +144,10 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
         <select data-k="sd.hart"><option value="">— escolher —</option><option>PV</option><option>SV</option><option>TV</option><option>QV</option></select></div>
       <div data-show="scale">
         <div class="row">
-          <div class="fld"><label>Escala · início</label><input type="text" inputmode="decimal" data-k="sd.lo" autocomplete="off"></div>
-          <div class="fld"><label>Escala · fim</label><input type="text" inputmode="decimal" data-k="sd.hi" autocomplete="off"></div>
+          <div class="fld"><label id="sdLo">Escala · início</label><input type="text" inputmode="decimal" data-k="sd.lo" autocomplete="off"></div>
+          <div class="fld"><label id="sdHi">Escala · fim</label><input type="text" inputmode="decimal" data-k="sd.hi" autocomplete="off"></div>
         </div>
-        <div class="fld"><label>Unidade da escala</label><select data-k="sd.unit" class="unit"></select></div>
+        <div class="fld"><label id="sdU">Unidade da escala</label><select data-k="sd.unit" class="unit"></select></div>
       </div>
       <div data-show="calcsel"><div class="sub">Bloco de cálculo entre a entrada e o faceplate</div>
       <div class="fld"><select data-k="sd.calc">
@@ -219,7 +219,7 @@ function unitList(k){
     case 'ds.unit':
       if(isDp2q())return FP.unitsFor('vazao');
       return S['in.unit']?FP.unitsFor(instPressure()?'pressao':'vazao'):allUnits();
-    case 'sd.unit':return isDp2q()?allUnits():FP.unitsFor(S['fp.var']==='vazao'?'vazao':'pressao');
+    case 'sd.unit':return FP.unitsFor(S['fp.var']==='vazao'?'vazao':'pressao');
   }
   return allUnits();
 }
@@ -246,11 +246,14 @@ function vis(){
     if(w==='auto')on=dq;
     if(w==='calcsel')on=!dq;
     if(w==='hart')on=src==='hart';
-    if(w==='scale')on=dq?(src==='hart'&&S['sd.raiz']==='sim'):(src!=='hart'||calc==='linear');
+    if(w==='scale')on=dq||src!=='hart'||calc==='linear';
     if(w==='lin')on=calc==='linear'&&!dq;
     if(w==='dslo')on=!dq;
     el.classList.toggle('hide',!on);
   });
+  $('#sdLo').textContent=dq?'Vazão no SDCD · início':'Escala · início';
+  $('#sdHi').textContent=dq?'Vazão no SDCD · fim':'Escala · fim';
+  $('#sdU').textContent=dq?'Unidade da vazão':'Unidade da escala';
   $('#dsT').innerHTML=dq?'Folha de dados · vazão correspondente ao ΔP máximo':'Folha de dados <small style="text-transform:none;letter-spacing:0">(opcional)</small>';
   $('#dsHiL').textContent=dq?'Vazão em 20 mA':'Fim';
   var ch=$('#chkConf'); ch.classList.toggle('dis',src==='desc');

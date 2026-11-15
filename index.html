@@ -240,7 +240,8 @@ function fillSelects(){
   $$('select.unit').forEach(function(s){
     var k=s.getAttribute('data-k'), v=unitVar(k)||'vazao';
     var list=FP.unitsFor(v);
-    s.innerHTML='<option value="">—</option>'+list.map(function(u){return '<option>'+u+'</option>'}).join('');
+    var html='<option value="">—</option>'+list.map(function(u){return '<option>'+u+'</option>'}).join('');
+    if(s.getAttribute('data-h')!==html){s.innerHTML=html;s.setAttribute('data-h',html);}
     if(S[k]&&list.indexOf(S[k])<0){S[k]='';}
   });
 }
@@ -249,7 +250,7 @@ function pushToInputs(){
     var k=el.getAttribute('data-k'), v=S[k];
     if(el.tagName==='BUTTON'){el.classList.toggle('on',S[k]===el.getAttribute('data-v'));}
     else if(el.type==='checkbox'){el.checked=!!v;}
-    else if(document.activeElement!==el){el.value=v==null?'':v;}
+    else if(el.tagName==='SELECT'||document.activeElement!==el){el.value=v==null?'':v;}
   });
 }
 function vis(){

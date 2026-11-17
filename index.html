@@ -70,6 +70,8 @@ input::placeholder{color:#47606f}
 .diag b{color:#fff}.diag.ok{border-color:#1f8a52}.diag.bad{border-color:#b9602a}
 .diag .h{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#7892a3;margin-bottom:4px}
 .diag p{margin:4px 0 0}
+.std td.ap,.std th.ap{background:rgba(39,168,255,.12)}
+.std td.ap{font-size:20px;font-weight:700;color:#6fe3ff}
 .det{margin-top:14px;border:1px solid var(--line);border-radius:11px;background:#081521}
 .det>summary{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;color:#cfe2ef;list-style:none}
 .det>summary::-webkit-details-marker{display:none}
@@ -190,6 +192,14 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   </section>
 </div>
 
+<section class="panel" style="margin-top:13px">
+  <div class="ph">③ Padrão de pressão <small>pontos para aplicar</small></div>
+  <div class="pb">
+    <div class="fld" style="max-width:260px"><label>Unidade do padrão</label><select data-k="std.unit" class="unit"></select></div>
+    <div id="std"></div>
+  </div>
+</section>
+
 <div class="res" id="res"></div>
 
 <div class="savebar">
@@ -240,6 +250,7 @@ function unitList(k){
     case 'fp.unit':
     case 'sd.unit':return FP.unitsFor(S.tipo==='PT'?'pressao':'vazao');
     case 'in.unit':return allUnits();
+    case 'std.unit':return FP.unitsFor('pressao');
     case 'sd.hunit':return S['in.unit']?FP.unitsFor(instPressure()?'pressao':'vazao'):allUnits();
   }
   return allUnits();
@@ -333,9 +344,23 @@ function renderFace(){
   say('bad','Diagnóstico','<b>'+df(d)+' '+(d<0?'abaixo':'acima')+' do esperado.</b>'+sug);
 }
 
+function renderStd(){
+  var M=FP.fromForm(S),iu=M.inst.unit,su=S['std.unit'],el=$('#std');
+  if(!iu||!FP.UNITS[iu]||FP.UNITS[iu].d!=='p'){el.innerHTML='<p class="hint" style="margin:0">Disponível quando a unidade do instrumento (bloco ① ) for de pressão.</p>';return;}
+  if(M.inst.lo==null||M.inst.hi==null||!isFinite(M.inst.lo)||!isFinite(M.inst.hi)){el.innerHTML='<p class="hint" style="margin:0">Preencha o início e o fim da faixa do instrumento.</p>';return;}
+  if(!su){el.innerHTML='<p class="hint" style="margin:0">Escolha a unidade do seu padrão de pressão.</p>';return;}
+  var h='<div class="tw"><table class="std"><thead><tr><th>Ponto</th><th>Pressão no instrumento</th><th class="ap">Aplicar no padrão</th></tr></thead><tbody>';
+  [0,25,50,75,100].forEach(function(pc){
+    var v=M.inst.lo+(pc/100)*(M.inst.hi-M.inst.lo), a=FP.conv(v,iu,su);
+    h+='<tr><td class="mono">'+pc+'%</td><td class="mono">'+fmt(v)+' <small>'+esc(iu)+'</small></td><td class="mono ap">'+fmt(a)+' <small>'+esc(su)+'</small></td></tr>';
+  });
+  h+='</tbody></table></div><p class="hint" style="margin:8px 0 0">Pressão aplicada: não depende do tratamento Linear/Raiz do Faceplate.</p>';
+  el.innerHTML=h;
+}
+
 var lastText='';
 function render(){
-  renderFace();
+  renderFace();renderStd();
   var M=FP.fromForm(S), R=FP.compute(M);
   markMissing(R);
   var h='',fu=M.fp.unit,iu=M.inst.unit;

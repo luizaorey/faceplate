@@ -28,7 +28,7 @@ Botão **Exemplo** carrega o caso de teste: faceplate 0–100.000 L/h × FT 0–
   Avisa raiz dupla / raiz ausente.
 - HART digital: pede variável selecionada e conversão; a faixa 4–20 mA não altera a leitura.
 - Tolerância de comparação: 0,5 % do span do faceplate.
-- Números: vírgula ou ponto nos decimais; `100.000` = cem mil. mmH₂O/inH₂O a 4 °C.
+- Números: vírgula ou ponto nos decimais; `100.000` = cem mil. mmH₂O/cmH₂O/inH₂O a 4 °C.
 - Vazão volumétrica × mássica × normal não se convertem (exigem densidade/condições) → "Dados insuficientes".
 
 ## Estrutura

@@ -224,3 +224,8 @@ test('instrumento já em vazão: Linear não precisa de nada além das faixas', 
   const f = { tipo: 'FT', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'in.unit': 'm³/h', 'in.lo': '0', 'in.hi': '200', 'sd.calc': 'linear' };
   const r = compute(fromForm(f)); assert.strictEqual(r.status, 'ok'); assert.strictEqual(r.hyp, false);
 });
+
+test('cmH₂O = 10 mmH₂O', () => {
+  near(conv(1, 'cmH₂O', 'mmH₂O'), 10, 1e-9);
+  near(conv(100, 'cmH₂O', 'mmH₂O'), 1000, 1e-9);
+});

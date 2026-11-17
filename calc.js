@@ -21,7 +21,7 @@
     'Pa': { d: 'p', f: 1 }, 'kPa': { d: 'p', f: 1000 }, 'MPa': { d: 'p', f: 1e6 },
     'mbar': { d: 'p', f: 100 }, 'bar': { d: 'p', f: 1e5 }, 'kgf/cm²': { d: 'p', f: 98066.5 },
     'psi': { d: 'p', f: 6894.757 }, 'atm': { d: 'p', f: 101325 }, 'mmHg': { d: 'p', f: 133.322 },
-    'mmH₂O': { d: 'p', f: 9.80665 }, 'inH₂O': { d: 'p', f: 249.082 }, 'mca': { d: 'p', f: 9806.65 },
+    'mmH₂O': { d: 'p', f: 9.80665 }, 'cmH₂O': { d: 'p', f: 98.0665 }, 'inH₂O': { d: 'p', f: 249.082 }, 'mca': { d: 'p', f: 9806.65 },
   };
   const DIMNAME = { qv: 'vazão volumétrica', qn: 'vazão normal (Nm³)', qm: 'vazão mássica', p: 'pressão' };
   const VARS = {

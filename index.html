@@ -60,6 +60,16 @@ input::placeholder{color:#47606f}
 .chk{display:flex;gap:10px;align-items:flex-start;background:#081521;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:13px;color:#cfe2ef;cursor:pointer;margin-top:4px}
 .chk input{width:22px;height:22px;margin:0;accent-color:var(--green);flex:none}
 .chk.dis{opacity:.45;pointer-events:none}
+.disp{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.dbox{flex:1 1 150px;background:#04101a;border:1px solid #1d6f96;border-radius:12px;padding:12px 14px;box-shadow:inset 0 0 18px rgba(39,168,255,.10)}
+.dbox .dl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#7fb4d1}
+.dbox .dv{font-size:34px;font-weight:700;color:#6fe3ff;margin-top:4px;line-height:1.1}
+.dbox .dv .u{font-size:15px;color:#7fb4d1;font-weight:400}
+.dbox.dim .dv{color:#4d6577}
+.diag{border-radius:10px;padding:11px 13px;background:#081521;border:1px solid var(--line);font-size:14px;color:#cfe2ef;margin:4px 0 6px}
+.diag b{color:#fff}.diag.ok{border-color:#1f8a52}.diag.bad{border-color:#b9602a}
+.diag .h{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#7892a3;margin-bottom:4px}
+.diag p{margin:4px 0 0}
 .det{margin-top:14px;border:1px solid var(--line);border-radius:11px;background:#081521}
 .det>summary{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;color:#cfe2ef;list-style:none}
 .det>summary::-webkit-details-marker{display:none}
@@ -146,8 +156,11 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
         <button data-k="sd.calc" data-v="nc">Não confirmado</button>
       </div>
       <p class="hint" id="calcHint"></p>
-      <div class="fld"><label>Valor mostrado agora <small>(opcional)</small></label><input type="text" inputmode="decimal" data-k="fp.val" placeholder="opcional" autocomplete="off"></div>
-      <p class="hint">Use vírgula ou ponto nos decimais. “100.000” é lido como cem mil.</p>
+      <div class="sub">Deveria mostrar</div>
+      <div class="disp" id="disp"></div>
+      <div class="fld"><label id="lblVal">Está mostrando</label><input type="text" inputmode="decimal" data-k="fp.val" placeholder="o que o operador está vendo" autocomplete="off"></div>
+      <div class="diag" id="diag"></div>
+      <p class="hint">Use vírgula ou ponto nos decimais. “100.000” é lido como cem mil. A resolução da indicação é deduzida das casas decimais que você digita.</p>
 
       <details class="det" id="det">
         <summary>Detalhes do sinal</summary>
@@ -273,8 +286,56 @@ function markMissing(R){
   });
 }
 
+function decs(str){
+  str=String(str==null?'':str).trim();
+  var m=str.match(/([.,])(\d+)$/); if(!m)return 0;
+  if(m[1]==='.'&&m[2].length===3&&str.indexOf(',')<0)return 0; /* 100.000 = milhar */
+  return m[2].length;
+}
+function renderFace(){
+  var M=FP.fromForm(S),R=FP.compute(M),fu=M.fp.unit||'';
+  var disp=$('#disp'),diag=$('#diag'),nc=S['sd.calc']==='nc';
+  $('#lblVal').textContent='Está mostrando'+(fu?' ('+fu+')':'');
+  var box=function(t,v,dim){return '<div class="dbox'+(dim?' dim':'')+'"><div class="dl">'+t+'</div><div class="dv mono">'+v+(dim?'':'<span class="u"> '+esc(fu)+'</span>')+'</div></div>';};
+  var say=function(cls,head,body){diag.className='diag'+(cls?' '+cls:'');diag.innerHTML='<div class="h">'+head+'</div>'+body;};
+  var hasRd=M.reading&&M.reading.val!=null;
+  if(R.status==='insuf'){
+    disp.innerHTML=box('Deveria mostrar','—',true);
+    say('','Diagnóstico','Falta informar: '+R.miss.slice(0,3).map(function(m){return esc(m.label)}).join('; ')+'.');return;
+  }
+  if(!hasRd){
+    disp.innerHTML=box('Deveria mostrar','—',true);
+    say('','Diagnóstico','Informe a <b>leitura no Trex</b> ou a <b>corrente medida (mA)</b> no bloco Instrumento para calcular o ponto.');return;
+  }
+  var preds;
+  if(nc){
+    var RL=FP.compute(FP.fromForm(Object.assign({},S,{'sd.calc':'linear'}))),RR=FP.compute(FP.fromForm(Object.assign({},S,{'sd.calc':'raiz'})));
+    preds=[{n:'Linear',v:RL.reading&&RL.reading.D},{n:'Raiz quadrada',v:RR.reading&&RR.reading.D}];
+  } else preds=[{n:S['sd.calc']==='raiz'?'Raiz quadrada':'Linear',v:R.reading&&R.reading.D}];
+  disp.innerHTML=preds.map(function(p){return box(nc?'Deveria mostrar — '+p.n+' (hipótese)':'Deveria mostrar',fmt(p.v));}).join('');
+  var shown=M.fp.val;
+  if(shown==null){say('','Diagnóstico','Aguardando o valor que o operador está vendo.'+(nc?' Com o tratamento não confirmado, as duas previsões são hipóteses.':''));return;}
+  var dec=decs(S['fp.val']),tol=0.5*Math.pow(10,-dec)+1e-9;
+  var df=function(x){return fmt(Math.abs(x),Math.max(dec,1))+' '+esc(fu);};
+  if(nc){
+    var hit=preds.filter(function(p){return Math.abs(shown-p.v)<=tol;});
+    if(hit.length===1) say('ok','Diagnóstico','<b>Bate com '+hit[0].n+'.</b> O SDCD provavelmente está configurado como '+(hit[0].n==='Linear'?'linear':'raiz quadrada')+'. Confirme e marque a chave acima.');
+    else if(hit.length===2) say('ok','Diagnóstico','<b>Bate com as duas hipóteses</b> neste ponto — escolha outro ponto (fora de 4 e 20 mA) para diferenciar.');
+    else say('bad','Diagnóstico','<b>Não bate com nenhuma das hipóteses.</b>'+preds.map(function(p){var d=shown-p.v;return '<p>'+p.n+': '+df(d)+(d<0?' abaixo':' acima')+' do esperado.</p>';}).join(''));
+    return;
+  }
+  var d=shown-preds[0].v;
+  if(Math.abs(d)<=tol){say('ok','Diagnóstico','<b>Bate com o esperado</b>, dentro da resolução da indicação.');return;}
+  var alt=FP.compute(FP.fromForm(Object.assign({},S,{'sd.calc':S['sd.calc']==='raiz'?'linear':'raiz'})));
+  var sug='';
+  if(alt.reading&&Math.abs(shown-alt.reading.D)<=tol)
+    sug='<p>O valor coincide com o cálculo '+(S['sd.calc']==='raiz'?'linear':'com raiz quadrada')+'. Confira se a entrada do SDCD está configurada como <b>'+(S['sd.calc']==='raiz'?'linear':'raiz quadrada')+'</b>.</p>';
+  say('bad','Diagnóstico','<b>'+df(d)+' '+(d<0?'abaixo':'acima')+' do esperado.</b>'+sug);
+}
+
 var lastText='';
 function render(){
+  renderFace();
   var M=FP.fromForm(S), R=FP.compute(M);
   markMissing(R);
   var h='',fu=M.fp.unit,iu=M.inst.unit;
@@ -339,7 +400,7 @@ function render(){
   }
 
   // leitura (simulação com a faixa planejada)
-  var rtxt='';
+  var rtxt='',h0=h;
   if(R.reading){
     var r=R.reading, seen=r.seen;
     var cmpTxt=function(d,tol){ if(seen==null)return ''; return Math.abs((seen-d)/Math.abs(R.points[4].D-R.points[0].D||1)*100)<=tol?' <span style="color:var(--green)">— confere com o operador</span>':''; };
@@ -357,6 +418,7 @@ function render(){
       rtxt='Ponto de teste (faixa planejada, '+how.replace(/<[^>]+>/g,'')+'): faceplate esperado '+fmt(r.D)+' '+fu+(seen!=null?' · operador vê '+fmt(seen)+' '+fu:'');
     }
   }
+  h=h0;
   if(R.fromFace&&!nc){
     h+='<div class="box note"><h3>Valor visto no Faceplate</h3><ul class="l">';
     if(R.fromFace.out) h+='<li>Valor do faceplate fora do que a escala atual consegue representar entre 3 e 21 mA.</li>';

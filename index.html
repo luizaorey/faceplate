@@ -72,6 +72,17 @@ input::placeholder{color:#47606f}
 .diag p{margin:4px 0 0}
 .std td.ap,.std th.ap{background:rgba(39,168,255,.12)}
 .std td.ap{font-size:20px;font-weight:700;color:#6fe3ff}
+.qty{display:flex;gap:8px;align-items:center}.qty input{flex:1 1 auto;min-width:0}.qty select{flex:0 0 118px;width:118px}
+.qty .pre{font-weight:700;color:#7fb4d1;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chipb{background:#081521;border:1px solid var(--line);border-radius:999px;padding:7px 8px 7px 13px;font-size:13px;cursor:pointer;color:#cfe2ef}
+.chipb.on{border-color:#2b8fd0;color:#fff;background:#0b2940}.chipb .x{margin-left:8px;color:#7892a3;padding:0 5px}
+.ptrow{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px;background:#081521}
+.vzt td,.vzt th{vertical-align:top}.vzt .bigv{font-size:17px;font-weight:700;color:#e8f4fc}
+.vzt .sm{font-size:11.5px;color:#7d95a6;margin-top:3px}.vzt .warnv{color:var(--amber)}.dimv{color:#5d7486}
+.tag{display:inline-block;font-size:10.5px;border-radius:999px;padding:1px 7px;border:1px solid;white-space:nowrap}
+.t-historico{color:#f0c36b;border-color:#6b5320}.t-calculo{color:#c3a6ff;border-color:#4d3a85}.t-campo{color:#6fe3a0;border-color:#1f6b46}.t-informado{color:#6fc4ff;border-color:#1f5a85}.t-folha{color:#aab8c2;border-color:#47565f}
+.dg{border-left:4px solid var(--line);padding:8px 11px;margin:8px 0;background:#081521;border-radius:0 8px 8px 0;font-size:14px;color:#cfe2ef}
+.dg.alta{border-left-color:#e0603a}.dg.media{border-left-color:#e0a33a}.dg.ok{border-left-color:#1fa35a}.dg.info{border-left-color:#3a8fd0}
 .det{margin-top:14px;border:1px solid var(--line);border-radius:11px;background:#081521}
 .det>summary{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;color:#cfe2ef;list-style:none}
 .det>summary::-webkit-details-marker{display:none}
@@ -118,7 +129,7 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
 <div class="topbar">
   <div class="logo">⌁</div>
   <div class="brand"><h1>Faceplate</h1><p>Indicação incoerente · FT e PT</p></div>
-  <div class="top-r">
+  <div class="top-r" id="fpTop">
     <input type="text" class="tagbox" data-k="tag" placeholder="TAG (ex.: FT-1234)" autocapitalize="characters" autocomplete="off">
     <div class="seg" style="width:130px"><button data-k="tipo" data-v="FT">FT</button><button data-k="tipo" data-v="PT">PT</button></div>
     <button class="btn" id="bEx">Exemplo</button>
@@ -126,6 +137,9 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   </div>
 </div>
 
+<div class="seg" id="viewSeg" style="margin-top:12px"><button type="button" data-view="fp">Conferência de faixa</button><button type="button" data-view="vz">Vazão — linha</button></div>
+
+<div id="viewFp">
 <div class="grid">
   <!-- INSTRUMENTO -->
   <section class="panel">
@@ -207,11 +221,15 @@ ul.l a{color:var(--amber);cursor:pointer;text-decoration:underline;text-underlin
   <span id="svOk" class="hint" style="margin:0"></span>
 </div>
 <div class="box" id="saved" style="margin-top:14px"></div>
+</div>
+
+<div id="viewVz" class="hide"></div>
 
 <div class="foot">Conferência e simulação na tela, com a faixa planejada — a configuração do instrumento ou do SDCD é feita separadamente.<br>Os dados ficam só neste aparelho.</div>
 </div>
 
 <script src="calc.js"></script>
+<script src="vazao.js"></script>
 <script>
 (function(){
 'use strict';
@@ -535,8 +553,19 @@ $('#bEx').onclick=function(){S=JSON.parse(JSON.stringify(EX));update();window.sc
 $('#bClr').onclick=function(){if(confirm('Limpar todos os campos?')){S=defaults(S.tipo||'FT');update();}};
 
 load(); update(); renderSaved();
+(function(){
+  var v='fp'; try{v=localStorage.getItem('faceplate.view')||'fp';}catch(e){}
+  function setView(x){
+    v=x; try{localStorage.setItem('faceplate.view',x);}catch(e){}
+    $('#viewFp').classList.toggle('hide',x!=='fp'); $('#viewVz').classList.toggle('hide',x!=='vz'); $('#fpTop').classList.toggle('hide',x!=='fp');
+    $$('#viewSeg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-view')===x);});
+  }
+  $('#viewSeg').addEventListener('click',function(e){var b=e.target.closest('button[data-view]'); if(b)setView(b.getAttribute('data-view'));});
+  setView(v);
+})();
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}
 })();
 </script>
+<script src="vz.js"></script>
 </body>
 </html>

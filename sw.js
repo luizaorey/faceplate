@@ -1,5 +1,5 @@
-var CACHE = "faceplate-v14";
-var ARQ = ["./", "./index.html", "./calc.js", "./manifest.webmanifest",
+var CACHE = "faceplate-v15";
+var ARQ = ["./", "./index.html", "./calc.js", "./vazao.js", "./vz.js", "./manifest.webmanifest",
            "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(e){

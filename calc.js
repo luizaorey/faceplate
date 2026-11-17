@@ -116,8 +116,8 @@
     if (src === 'desc') R.confirm.push('Origem do sinal no SDCD (4–20 mA direto ou HART digital) — o cálculo assume 4–20 mA direto');
     if (calc === 'outro') miss('sd.calc', 'SDCD: bloco de cálculo "outro" não pode ser simulado — informe extração de raiz ou ganho/offset');
     if (calc === 'desconhecido') {
-      R.confirm.push('Se existe bloco de cálculo entre a entrada e o faceplate — assumido o que deixa a cadeia coerente');
       calc = kind === 'dp2q' && inst.mode === 'linear' ? 'raiz' : 'none';
+      R.confirm.push('Tratamento do sinal no SDCD (Linear ou Raiz quadrada) — assumido ' + (calc === 'raiz' ? 'raiz quadrada, por ser pressão no instrumento e vazão no faceplate' : 'linear, por já ser a variável do faceplate'));
       R.hyp = true;
     }
     if (calc === 'linear' && !isN(sd.a)) miss('sd.a', 'SDCD: ganho (a) do escalonamento linear  saída = a·entrada + b');
@@ -125,6 +125,16 @@
 
     if (sd.var && kind && calc === 'none' && (sd.var === 'vazao') !== (fp.var === 'vazao') && srcEff === '420') {
       miss('sd.calc', 'Entrada do SDCD em ' + VARLABEL[sd.var] + ' e faceplate em ' + VARLABEL[fp.var] + ' sem bloco de cálculo: informe qual cálculo é aplicado');
+    }
+    if (srcEff === 'hart' && sd.hunit && inst.unit && !sameDim(sd.hunit, inst.unit)) {
+      miss('sd.hunit', 'Unidade da variável HART de grandeza diferente da do instrumento');
+    }
+    if (hasScale && srcEff === '420' && calc === 'none' && fp.unit && sameDim(sd.unit, fp.unit)) {
+      const l2 = conv(sd.lo, sd.unit, fp.unit), h2 = conv(sd.hi, sd.unit, fp.unit);
+      const t2 = 0.001 * Math.abs(fp.hi - fp.lo);
+      if (Math.abs(l2 - fp.lo) > t2 || Math.abs(h2 - fp.hi) > t2) {
+        R.warn.push('A escala interna do SDCD (' + fmt(l2) + ' a ' + fmt(h2) + ' ' + fp.unit + ') é diferente da faixa exibida no Faceplate (' + fmt(fp.lo) + ' a ' + fmt(fp.hi) + ' ' + fp.unit + ').');
+      }
     }
     if (srcEff === 'hart') {
       if (!sd.hart) miss('sd.hart', 'SDCD: variável HART selecionada (PV, SV, TV ou QV)');
@@ -141,15 +151,6 @@
       miss('sd.unit', 'SDCD: unidade da escala de grandeza diferente da do faceplate sem bloco de cálculo');
     }
 
-    // confirmação
-    if (!sd.conf) {
-      R.hyp = true;
-      if (srcEff === '420') R.confirm.push(hasScale ? 'Escala da entrada analógica na configuração do SDCD (marque "conferido" quando confirmar)' : 'Escala da entrada analógica no SDCD — usada a faixa do faceplate como hipótese');
-      else R.confirm.push('Variável HART e conversão até o faceplate na configuração do SDCD');
-    } else if (srcEff === '420' && !hasScale && calc !== 'raiz') {
-      R.hyp = true;
-      R.confirm.push('Escala da entrada analógica não informada — usada a faixa do faceplate como hipótese');
-    }
     if (src === 'desc') R.hyp = true;
 
     if (R.miss.length) { R.status = 'insuf'; R.summary = 'Dados insuficientes'; return R; }
@@ -172,7 +173,10 @@
     const dcs = (mA) => {
       let x, xu;
       if (srcEff === '420') { x = sl + fr(mA) * (sh - sl); xu = sunit; }
-      else { x = instVal(mA); xu = inst.unit; }
+      else {
+        xu = sd.hunit && sameDim(sd.hunit, inst.unit) ? sd.hunit : inst.unit;
+        x = conv(instVal(mA), inst.unit, xu);
+      }
       let D;
       if (calc === 'none') D = conv(x, xu, fp.unit);
       else if (calc === 'raiz') {
@@ -300,12 +304,16 @@
     const n = (k) => parseNum(s[k]);
     const iu = UNITS[s['in.unit']];
     const instVar = iu && iu.d === 'p' ? 'pressao' : 'vazao';
-    const fpVar = s['fp.var'] === 'vazao' ? 'vazao' : 'pressao';
-    // instrumento em pressão e SDCD/faceplate em vazão: o usuário diz se o SDCD extrai a raiz (chave sd.raiz)
+    const tipo = s.tipo || 'FT';
+    const fpVar = tipo === 'PT' ? 'pressao' : 'vazao';
     const dp2q = fpVar === 'vazao' && instVar === 'pressao';
-    const sdOk = !!(s['sd.unit'] && UNITS[s['sd.unit']] && UNITS[s['sd.unit']].d !== 'p' && n('sd.lo') != null && n('sd.hi') != null && n('sd.hi') > 0);
+    // escala interna do SDCD (opcional): só vale se completa e na grandeza certa
+    const su = UNITS[s['sd.unit']];
+    const sdOk = !!(su && su.d !== 'p' && n('sd.lo') != null && n('sd.hi') != null && n('sd.hi') > 0);
+    const cs = s['sd.calc'];
+    const calc = cs === 'raiz' ? 'raiz' : cs === 'linear' ? 'none' : 'desconhecido';
     return {
-      tipo: s.tipo || 'FT',
+      tipo,
       fp: { var: fpVar, unit: s['fp.unit'], lo: n('fp.lo'), hi: n('fp.hi'), val: n('fp.val') },
       inst: {
         var: instVar, unit: s['in.unit'], lo: n('in.lo'), hi: n('in.hi'), mode: dp2q ? 'linear' : '',
@@ -313,11 +321,10 @@
         q: dp2q ? (sdOk ? { unit: s['sd.unit'], hi: n('sd.hi') } : { unit: s['fp.unit'], hi: n('fp.hi') }) : {},
       },
       reading: { kind: s['in.rkind'] || 'valor', val: n('in.read') },
-      ds: dp2q ? {} : { unit: s['ds.unit'], lo: n('ds.lo'), hi: n('ds.hi') },
+      ds: {},
       sd: {
-        src: s['sd.src'] || 'desc', var: '', unit: s['sd.unit'], lo: n('sd.lo'), hi: n('sd.hi'),
-        calc: dp2q ? (s['sd.raiz'] === 'sim' ? 'raiz' : 'none') : (s['sd.calc'] || 'none'), a: n('sd.a'), b: n('sd.b'), hart: s['sd.hart'] || '',
-        conf: s['sd.conf'] === true || s['sd.conf'] === 'true',
+        src: s['sd.src'] || '420', var: '', unit: s['sd.unit'], lo: n('sd.lo'), hi: n('sd.hi'),
+        calc, hart: s['sd.hart'] || 'PV', hunit: s['sd.hunit'] || '', conf: true,
       },
     };
   }

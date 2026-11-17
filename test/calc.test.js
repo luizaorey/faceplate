@@ -55,7 +55,7 @@ test('sem escala do SDCD: hipótese = faixa do faceplate', () => {
   assert.strictEqual(r.hyp, true);
   assert.strictEqual(r.status, 'div');
   near(r.equiv.hi, 100);
-  assert.ok(r.confirm.length >= 2);
+  assert.ok(r.confirm.length >= 1);
 });
 
 test('folha de dados indica qual faixa confere', () => {
@@ -177,19 +177,19 @@ test('FT em campo mas faceplate em pressão = não compara', () => {
 
 test('formulário: instrumento em pressão + SDCD em vazão: a chave de raiz decide', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '150', 'in.unit': 'mmH₂O', 'in.lo': '0', 'in.hi': '2500',
-    'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'sim' };
+    'sd.src': '420', 'sd.calc': 'raiz' };
   assert.strictEqual(compute(fromForm(f)).status, 'ok');
-  f['sd.raiz'] = 'nao';
+  f['sd.calc'] = 'linear';
   assert.strictEqual(compute(fromForm(f)).status, 'div');
-  f['fp.hi'] = ''; f['sd.raiz'] = 'sim';
+  f['fp.hi'] = ''; f['sd.calc'] = 'raiz';
   assert.strictEqual(compute(fromForm(f)).status, 'insuf');
 });
 
 test('chave de raiz: Não extrair dá divergência, Extrair confere', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'fp.val': '141,4', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '50',
-    'in.rkind': 'valor', 'in.read': '25', 'sd.src': '420', 'sd.conf': true, 'sd.raiz': 'nao' };
+    'in.rkind': 'valor', 'in.read': '25', 'sd.src': '420', 'sd.calc': 'linear' };
   assert.strictEqual(compute(fromForm(f)).status, 'div');
-  f['sd.raiz'] = 'sim';
+  f['sd.calc'] = 'raiz';
   const r = compute(fromForm(f));
   assert.strictEqual(r.status, 'ok');
   near(r.reading.D, 141.42, 0.01);
@@ -208,4 +208,19 @@ test('HART + raiz no SDCD', () => {
   const f = { 'fp.var': 'vazao', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '50',
     'sd.src': 'hart', 'sd.hart': 'PV', 'sd.conf': true, 'sd.raiz': 'sim', 'sd.unit': 'm³/h', 'sd.lo': '0', 'sd.hi': '200' };
   assert.strictEqual(compute(fromForm(f)).status, 'ok');
+});
+
+test('chave do tratamento: 12 mA, faceplate 0–200 m³/h, ΔP 0–100 kPa', () => {
+  const f = { tipo: 'FT', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'in.unit': 'kPa', 'in.lo': '0', 'in.hi': '100',
+    'in.rkind': 'ma', 'in.read': '12', 'sd.src': '420', 'sd.calc': 'linear' };
+  const rl = compute(fromForm(f)); near(rl.reading.D, 100, 1e-6); assert.strictEqual(rl.hyp, false);
+  f['sd.calc'] = 'raiz';
+  const rr = compute(fromForm(f)); near(rr.reading.D, 141.4214, 1e-3); assert.strictEqual(rr.status, 'ok');
+  f['sd.calc'] = 'nc';
+  const rn = compute(fromForm(f)); assert.strictEqual(rn.hyp, true); assert.ok(rn.confirm.length >= 1);
+  assert.notStrictEqual(rn.status, 'insuf');
+});
+test('instrumento já em vazão: Linear não precisa de nada além das faixas', () => {
+  const f = { tipo: 'FT', 'fp.unit': 'm³/h', 'fp.lo': '0', 'fp.hi': '200', 'in.unit': 'm³/h', 'in.lo': '0', 'in.hi': '200', 'sd.calc': 'linear' };
+  const r = compute(fromForm(f)); assert.strictEqual(r.status, 'ok'); assert.strictEqual(r.hyp, false);
 });
